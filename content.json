@@ -10,6 +10,11 @@
       "id": "poster002",
       "targetIndex": 1,
       "video": "muru.mp4"
+    },
+    {
+      "id": "poster003",
+      "targetIndex": 2,
+      "video": "video3.mp4"
     }
   ]
 }
