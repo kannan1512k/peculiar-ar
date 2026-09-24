@@ -57,13 +57,24 @@
       webkit-playsinline>
     </video>
 
+    <video
+      id="video3"
+      loop="true"
+      crossorigin="anonymous"
+      playsinline
+      webkit-playsinline>
+    </video>
+
   </a-assets>
+
 
   <a-camera
     position="0 0 0"
     look-controls="enabled: false">
   </a-camera>
 
+
+  <!-- POSTER 1 -->
 
   <a-entity
     id="target1"
@@ -80,12 +91,31 @@
   </a-entity>
 
 
+  <!-- POSTER 2 -->
+
   <a-entity
     id="target2"
     mindar-image-target="targetIndex: 1">
 
     <a-video
       src="#video2"
+      position="0 0 0"
+      width="1"
+      height="1"
+      material="shader: flat">
+    </a-video>
+
+  </a-entity>
+
+
+  <!-- POSTER 3 -->
+
+  <a-entity
+    id="target3"
+    mindar-image-target="targetIndex: 2">
+
+    <a-video
+      src="#video3"
       position="0 0 0"
       width="1"
       height="1"
@@ -104,9 +134,11 @@ const scene = document.querySelector("a-scene");
 
 const video1 = document.querySelector("#video1");
 const video2 = document.querySelector("#video2");
+const video3 = document.querySelector("#video3");
 
 const target1 = document.querySelector("#target1");
 const target2 = document.querySelector("#target2");
+const target3 = document.querySelector("#target3");
 
 
 /* LOAD CONTENT DATABASE */
@@ -125,10 +157,15 @@ fetch("./content.json")
         video2.src = "./" + poster.video;
       }
 
+      if (poster.targetIndex === 2) {
+        video3.src = "./" + poster.video;
+      }
+
     });
 
     video1.load();
     video2.load();
+    video3.load();
 
   })
   .catch(error => {
@@ -151,16 +188,36 @@ startButton.addEventListener("click", async () => {
 });
 
 
+/* STOP OTHER VIDEOS */
+
+function stopOtherVideos(currentVideo) {
+
+  const videos = [video1, video2, video3];
+
+  videos.forEach(video => {
+
+    if (video !== currentVideo) {
+
+      video.pause();
+      video.currentTime = 0;
+
+    }
+
+  });
+
+}
+
+
 /* POSTER 1 */
 
 target1.addEventListener("targetFound", async () => {
 
-  video2.pause();
-  video2.currentTime = 0;
+  stopOtherVideos(video1);
 
   try {
 
     video1.currentTime = 0;
+
     await video1.play();
 
   } catch (error) {
@@ -183,12 +240,12 @@ target1.addEventListener("targetLost", () => {
 
 target2.addEventListener("targetFound", async () => {
 
-  video1.pause();
-  video1.currentTime = 0;
+  stopOtherVideos(video2);
 
   try {
 
     video2.currentTime = 0;
+
     await video2.play();
 
   } catch (error) {
@@ -203,6 +260,34 @@ target2.addEventListener("targetFound", async () => {
 target2.addEventListener("targetLost", () => {
 
   video2.pause();
+
+});
+
+
+/* POSTER 3 */
+
+target3.addEventListener("targetFound", async () => {
+
+  stopOtherVideos(video3);
+
+  try {
+
+    video3.currentTime = 0;
+
+    await video3.play();
+
+  } catch (error) {
+
+    console.log("Video 3 play blocked:", error);
+
+  }
+
+});
+
+
+target3.addEventListener("targetLost", () => {
+
+  video3.pause();
 
 });
 
