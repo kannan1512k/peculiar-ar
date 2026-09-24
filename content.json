@@ -24,6 +24,12 @@
       "targetFile": "poster004.jpg",
       "targetIndex": 3,
       "video": "video4.mp4"
+    },
+    {
+      "id": "poster005",
+      "targetFile": "poster005.jpg",
+      "targetIndex": 4,
+      "video": "video005.mp4"
     }
   ]
 }
