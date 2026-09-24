@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "posters": [
+    {
+      "id": "poster001",
+      "targetFile": "poster001.jpg",
+      "targetIndex": 0,
+      "video": "Vijay1.mp4"
+    },
+    {
+      "id": "poster002",
+      "targetFile": "poster002.jpg",
+      "targetIndex": 1,
+      "video": "muru.mp4"
+    },
+    {
+      "id": "poster003",
+      "targetFile": "poster003.jpg",
+      "targetIndex": 2,
+      "video": "video3.mp4"
+    },
+    {
+      "id": "poster004",
+      "targetFile": "poster004.jpg",
+      "targetIndex": 3,
+      "video": "video4.mp4"
+    }
+  ]
+}
