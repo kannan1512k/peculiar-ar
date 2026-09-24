@@ -1,328 +1,113 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html>
 <head>
-  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-  >
-
-  <title>Peculiar AR</title>
-
-  <!-- A-Frame -->
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
-
-  <!-- MindAR -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
-
-    html,
     body {
       margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
       overflow: hidden;
-      background: #000;
     }
-
-    /* START BUTTON */
 
     #startButton {
       position: fixed;
       z-index: 9999;
-
       top: 50%;
       left: 50%;
-
       transform: translate(-50%, -50%);
-
-      padding: 18px 36px;
-
-      border: none;
-      border-radius: 14px;
-
-      background: white;
-      color: black;
-
+      padding: 18px 35px;
       font-size: 20px;
       font-weight: bold;
+      border: none;
+      border-radius: 12px;
+      background: white;
+      color: black;
     }
-
-
-    /* FULL SCREEN VIDEO */
-
-    #fullscreenVideo {
-
-      display: none;
-
-      position: fixed;
-
-      top: 0;
-      left: 0;
-
-      width: 100vw;
-      height: 100vh;
-
-      object-fit: cover;
-
-      background: black;
-
-      z-index: 10000;
-
-    }
-
-
-    /* Hide A-Frame VR button */
-
-    .a-enter-vr {
-      display: none !important;
-    }
-
   </style>
-
 </head>
-
 
 <body>
 
+<button id="startButton">START AR</button>
 
-  <!-- FULL SCREEN VIDEO -->
+<a-scene
+  mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;"
+  color-space="sRGB"
+  renderer="colorManagement: true"
+  vr-mode-ui="enabled: false"
+  device-orientation-permission-ui="enabled: false">
 
-  <video
-    id="fullscreenVideo"
-    src="./Vijay1.mp4"
-    playsinline
-    webkit-playsinline
-    preload="auto"
-  ></video>
+  <a-assets>
+    <video
+      id="arVideo"
+      src="./Vijay1.mp4"
+      loop="true"
+      crossorigin="anonymous"
+      playsinline
+      webkit-playsinline>
+    </video>
+  </a-assets>
 
+  <a-camera
+    position="0 0 0"
+    look-controls="enabled: false">
+  </a-camera>
 
-  <!-- START BUTTON -->
+  <a-entity
+    id="target"
+    mindar-image-target="targetIndex: 0">
 
-  <button id="startButton">
-    START AR
-  </button>
-
-
-  <!-- AR SCENE -->
-
-  <a-scene
-
-    mindar-image="
-      imageTargetSrc: ./targets.mind;
-      autoStart: false;
-      uiLoading: no;
-      uiScanning: no;
-      uiError: no;
-    "
-
-    color-space="sRGB"
-
-    renderer="colorManagement: true"
-
-    vr-mode-ui="enabled: false"
-
-    device-orientation-permission-ui="enabled: false"
-
-  >
-
-
-    <!-- CAMERA -->
-
-    <a-camera
+    <a-video
+      id="videoPlane"
+      src="#arVideo"
       position="0 0 0"
-      look-controls="enabled: false"
-    ></a-camera>
+      width="1"
+      height="1"
+      material="shader: flat">
+    </a-video>
 
+  </a-entity>
 
-    <!-- TARGET -->
+</a-scene>
 
-    <a-entity
-      id="target"
-      mindar-image-target="targetIndex: 0"
-    ></a-entity>
+<script>
 
+const startButton = document.querySelector("#startButton");
+const scene = document.querySelector("a-scene");
+const video = document.querySelector("#arVideo");
+const target = document.querySelector("#target");
 
-  </a-scene>
+startButton.addEventListener("click", async () => {
 
+  startButton.style.display = "none";
 
-  <script>
+  const arSystem = scene.systems["mindar-image-system"];
 
-    /* =========================
-       ELEMENTS
-    ========================= */
+  await arSystem.start();
 
-    const startButton =
-      document.getElementById("startButton");
+});
 
-    const fullscreenVideo =
-      document.getElementById("fullscreenVideo");
+target.addEventListener("targetFound", async () => {
 
-    const scene =
-      document.querySelector("a-scene");
+  try {
+    video.currentTime = 0;
+    await video.play();
+  } catch (error) {
+    console.log("Video play blocked:", error);
+  }
 
-    const target =
-      document.getElementById("target");
+});
 
+target.addEventListener("targetLost", () => {
 
-    /* =========================
-       START AR
-    ========================= */
+  video.pause();
 
-    startButton.addEventListener("click", async function () {
+});
 
-      try {
-
-        const arSystem =
-          scene.systems["mindar-image-system"];
-
-        /*
-          Start camera
-        */
-
-        await arSystem.start();
-
-
-        /*
-          Hide START button
-        */
-
-        startButton.style.display = "none";
-
-
-        console.log("AR CAMERA STARTED");
-
-      }
-
-      catch (error) {
-
-        console.error(
-          "AR START ERROR:",
-          error
-        );
-
-        alert(
-          "Camera start failed. Please allow camera permission."
-        );
-
-      }
-
-    });
-
-
-    /* =========================
-       TARGET FOUND
-    ========================= */
-
-    target.addEventListener(
-      "targetFound",
-      async function () {
-
-        console.log("TARGET FOUND");
-
-
-        /*
-          Show video
-        */
-
-        fullscreenVideo.style.display =
-          "block";
-
-
-        /*
-          Start from beginning
-        */
-
-        fullscreenVideo.currentTime = 0;
-
-
-        /*
-          Sound ON
-        */
-
-        fullscreenVideo.muted = false;
-
-
-        try {
-
-          await fullscreenVideo.play();
-
-          console.log(
-            "FULL SCREEN VIDEO PLAYING"
-          );
-
-        }
-
-        catch (error) {
-
-          console.error(
-            "VIDEO PLAY ERROR:",
-            error
-          );
-
-        }
-
-      }
-    );
-
-
-    /* =========================
-       TARGET LOST
-    ========================= */
-
-    target.addEventListener(
-      "targetLost",
-      function () {
-
-        console.log("TARGET LOST");
-
-
-        /*
-          Pause video
-        */
-
-        fullscreenVideo.pause();
-
-
-        /*
-          Hide video
-        */
-
-        fullscreenVideo.style.display =
-          "none";
-
-      }
-    );
-
-
-    /* =========================
-       VIDEO ENDED
-    ========================= */
-
-    fullscreenVideo.addEventListener(
-      "ended",
-      function () {
-
-        console.log("VIDEO ENDED");
-
-
-        /*
-          Hide video
-        */
-
-        fullscreenVideo.style.display =
-          "none";
-
-      }
-    );
-
-  </script>
-
+</script>
 
 </body>
-
 </html>
