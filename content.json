@@ -1,4 +1,15 @@
 {
   "version": 1,
-  "posters": []
+  "posters": [
+    {
+      "id": "poster001",
+      "targetIndex": 0,
+      "video": "Vijay1.mp4"
+    },
+    {
+      "id": "poster002",
+      "targetIndex": 1,
+      "video": "muru.mp4"
+    }
+  ]
 }
