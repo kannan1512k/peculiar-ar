@@ -25,12 +25,27 @@
       background: #ffffff;
       color: #000000;
     }
+
+    #loadingText {
+      position: fixed;
+      z-index: 9998;
+      top: 60%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 16px;
+      display: none;
+    }
   </style>
 </head>
 
 <body>
 
-<button id="startButton">START AR</button>
+<button id="startButton" disabled>LOADING...</button>
+
+<div id="loadingText">
+  Loading AR content...
+</div>
 
 <a-scene
   mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;"
@@ -39,90 +54,12 @@
   vr-mode-ui="enabled: false"
   device-orientation-permission-ui="enabled: false">
 
-  <a-assets>
-
-    <video
-      id="video1"
-      loop="true"
-      crossorigin="anonymous"
-      playsinline
-      webkit-playsinline>
-    </video>
-
-    <video
-      id="video2"
-      loop="true"
-      crossorigin="anonymous"
-      playsinline
-      webkit-playsinline>
-    </video>
-
-    <video
-      id="video3"
-      loop="true"
-      crossorigin="anonymous"
-      playsinline
-      webkit-playsinline>
-    </video>
-
-  </a-assets>
-
+  <a-assets id="videoAssets"></a-assets>
 
   <a-camera
     position="0 0 0"
     look-controls="enabled: false">
   </a-camera>
-
-
-  <!-- POSTER 1 -->
-
-  <a-entity
-    id="target1"
-    mindar-image-target="targetIndex: 0">
-
-    <a-video
-      src="#video1"
-      position="0 0 0"
-      width="1"
-      height="1"
-      material="shader: flat">
-    </a-video>
-
-  </a-entity>
-
-
-  <!-- POSTER 2 -->
-
-  <a-entity
-    id="target2"
-    mindar-image-target="targetIndex: 1">
-
-    <a-video
-      src="#video2"
-      position="0 0 0"
-      width="1"
-      height="1"
-      material="shader: flat">
-    </a-video>
-
-  </a-entity>
-
-
-  <!-- POSTER 3 -->
-
-  <a-entity
-    id="target3"
-    mindar-image-target="targetIndex: 2">
-
-    <a-video
-      src="#video3"
-      position="0 0 0"
-      width="1"
-      height="1"
-      material="shader: flat">
-    </a-video>
-
-  </a-entity>
 
 </a-scene>
 
@@ -130,69 +67,156 @@
 <script>
 
 const startButton = document.querySelector("#startButton");
+const loadingText = document.querySelector("#loadingText");
 const scene = document.querySelector("a-scene");
+const videoAssets = document.querySelector("#videoAssets");
 
-const video1 = document.querySelector("#video1");
-const video2 = document.querySelector("#video2");
-const video3 = document.querySelector("#video3");
-
-const target1 = document.querySelector("#target1");
-const target2 = document.querySelector("#target2");
-const target3 = document.querySelector("#target3");
+let videos = [];
+let targetsReady = false;
 
 
 /* LOAD CONTENT DATABASE */
 
-fetch("./content.json")
-  .then(response => response.json())
-  .then(data => {
+async function loadContent() {
+
+  try {
+
+    loadingText.style.display = "block";
+
+    const response = await fetch("./content.json");
+
+    if (!response.ok) {
+      throw new Error("Could not load content.json");
+    }
+
+    const data = await response.json();
+
+    if (!data.posters || data.posters.length === 0) {
+      throw new Error("No posters found in content.json");
+    }
+
+
+    /* CREATE ALL VIDEOS + TARGETS */
 
     data.posters.forEach(poster => {
 
-      if (poster.targetIndex === 0) {
-        video1.src = "./" + poster.video;
-      }
+      const videoId = "video_" + poster.id;
 
-      if (poster.targetIndex === 1) {
-        video2.src = "./" + poster.video;
-      }
+      /* CREATE VIDEO */
 
-      if (poster.targetIndex === 2) {
-        video3.src = "./" + poster.video;
-      }
+      const video = document.createElement("video");
+
+      video.id = videoId;
+      video.src = "./" + poster.video;
+      video.loop = true;
+      video.crossOrigin = "anonymous";
+      video.playsInline = true;
+      video.setAttribute("webkit-playsinline", "");
+
+      videoAssets.appendChild(video);
+
+      videos.push(video);
+
+
+      /* CREATE TARGET */
+
+      const target = document.createElement("a-entity");
+
+      target.setAttribute(
+        "mindar-image-target",
+        "targetIndex: " + poster.targetIndex
+      );
+
+
+      /* CREATE VIDEO PLANE */
+
+      const videoPlane = document.createElement("a-video");
+
+      videoPlane.setAttribute("src", "#" + videoId);
+      videoPlane.setAttribute("position", "0 0 0");
+      videoPlane.setAttribute("width", "1");
+      videoPlane.setAttribute("height", "1");
+      videoPlane.setAttribute(
+        "material",
+        "shader: flat"
+      );
+
+
+      target.appendChild(videoPlane);
+
+      scene.appendChild(target);
+
+
+      /* TARGET FOUND */
+
+      target.addEventListener("targetFound", async () => {
+
+        stopOtherVideos(video);
+
+        try {
+
+          video.currentTime = 0;
+
+          await video.play();
+
+        } catch (error) {
+
+          console.log(
+            "Video play blocked:",
+            poster.id,
+            error
+          );
+
+        }
+
+      });
+
+
+      /* TARGET LOST */
+
+      target.addEventListener("targetLost", () => {
+
+        video.pause();
+
+      });
 
     });
 
-    video1.load();
-    video2.load();
-    video3.load();
 
-  })
-  .catch(error => {
+    targetsReady = true;
 
-    console.log("Content database error:", error);
+    loadingText.style.display = "none";
 
-  });
+    startButton.disabled = false;
+    startButton.textContent = "START AR";
 
 
-/* START AR */
+    console.log(
+      "AR content loaded:",
+      data.posters.length,
+      "posters"
+    );
 
-startButton.addEventListener("click", async () => {
+  } catch (error) {
 
-  startButton.style.display = "none";
+    console.error(
+      "Content database error:",
+      error
+    );
 
-  const arSystem = scene.systems["mindar-image-system"];
+    loadingText.textContent =
+      "Failed to load AR content.";
 
-  await arSystem.start();
+    startButton.disabled = true;
 
-});
+  }
+
+}
 
 
-/* STOP OTHER VIDEOS */
+/* STOP ALL OTHER VIDEOS */
 
 function stopOtherVideos(currentVideo) {
-
-  const videos = [video1, video2, video3];
 
   videos.forEach(video => {
 
@@ -208,88 +232,41 @@ function stopOtherVideos(currentVideo) {
 }
 
 
-/* POSTER 1 */
+/* START AR */
 
-target1.addEventListener("targetFound", async () => {
+startButton.addEventListener("click", async () => {
 
-  stopOtherVideos(video1);
+  if (!targetsReady) {
+    return;
+  }
+
+  startButton.style.display = "none";
+
+  const arSystem =
+    scene.systems["mindar-image-system"];
 
   try {
 
-    video1.currentTime = 0;
-
-    await video1.play();
+    await arSystem.start();
 
   } catch (error) {
 
-    console.log("Video 1 play blocked:", error);
+    console.error(
+      "AR start error:",
+      error
+    );
+
+    startButton.style.display = "block";
+    startButton.textContent = "START AR";
 
   }
 
 });
 
 
-target1.addEventListener("targetLost", () => {
+/* LOAD CONTENT */
 
-  video1.pause();
-
-});
-
-
-/* POSTER 2 */
-
-target2.addEventListener("targetFound", async () => {
-
-  stopOtherVideos(video2);
-
-  try {
-
-    video2.currentTime = 0;
-
-    await video2.play();
-
-  } catch (error) {
-
-    console.log("Video 2 play blocked:", error);
-
-  }
-
-});
-
-
-target2.addEventListener("targetLost", () => {
-
-  video2.pause();
-
-});
-
-
-/* POSTER 3 */
-
-target3.addEventListener("targetFound", async () => {
-
-  stopOtherVideos(video3);
-
-  try {
-
-    video3.currentTime = 0;
-
-    await video3.play();
-
-  } catch (error) {
-
-    console.log("Video 3 play blocked:", error);
-
-  }
-
-});
-
-
-target3.addEventListener("targetLost", () => {
-
-  video3.pause();
-
-});
+loadContent();
 
 </script>
 
