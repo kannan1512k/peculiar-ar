@@ -1,0 +1,106 @@
+name: Build AR Targets
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "targets/**"
+
+permissions:
+  contents: write
+
+jobs:
+  build-targets:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Clone MindAR v1.2.5
+        run: |
+          git clone --depth 1 --branch v1.2.5 https://github.com/hiukim/mind-ar-js.git mindar
+
+      - name: Install MindAR compiler
+        working-directory: mindar/examples/nodejs/node-canvas
+        run: npm install
+
+      - name: Create compiler script
+        run: |
+          cat > mindar/examples/nodejs/node-canvas/build-targets.js <<'EOF'
+          import { OfflineCompiler } from './offline-compiler.js';
+          import { loadImage } from 'canvas';
+          import { writeFile } from 'fs/promises';
+          import fs from 'fs';
+          import path from 'path';
+
+          const repoRoot = process.env.GITHUB_WORKSPACE;
+          const targetDir = path.join(repoRoot, 'targets');
+          const outputFile = path.join(repoRoot, 'targets.mind');
+
+          async function run() {
+            const files = fs.readdirSync(targetDir)
+              .filter(file => /\.(png|jpg|jpeg|webp)$/i.test(file))
+              .sort();
+
+            if (files.length === 0) {
+              throw new Error('No target images found in targets/');
+            }
+
+            console.log(`Found ${files.length} target images.`);
+
+            const images = [];
+
+            for (const file of files) {
+              const imagePath = path.join(targetDir, file);
+              console.log(`Loading: ${file}`);
+              images.push(await loadImage(imagePath));
+            }
+
+            const compiler = new OfflineCompiler();
+
+            console.log('Starting MindAR compilation...');
+
+            await compiler.compileImageTargets(
+              images,
+              progress => {
+                console.log(`Progress: ${progress.toFixed(2)}%`);
+              }
+            );
+
+            const buffer = compiler.exportData();
+
+            await writeFile(outputFile, buffer);
+
+            console.log(`Created ${outputFile}`);
+            console.log(`Total targets: ${files.length}`);
+          }
+
+          run().catch(error => {
+            console.error(error);
+            process.exit(1);
+          });
+          EOF
+
+      - name: Build targets.mind
+        working-directory: mindar/examples/nodejs/node-canvas
+        run: node build-targets.js
+
+      - name: Commit updated targets.mind
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add targets.mind
+
+          if git diff --cached --quiet; then
+            echo "No changes to targets.mind"
+          else
+            git commit -m "Auto rebuild AR targets"
+            git push
+          fi
