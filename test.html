@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Peculiar AR Test</title>
+</head>
+
+<body>
+
+<h2>Peculiar AR System</h2>
+
+<div id="status">Loading...</div>
+
+<script>
+
+fetch("./content.json")
+  .then(response => response.json())
+  .then(data => {
+
+    const status = document.getElementById("status");
+
+    status.innerHTML =
+      "Posters loaded: " + data.posters.length;
+
+  })
+  .catch(error => {
+
+    document.getElementById("status").innerHTML =
+      "Error loading content.json";
+
+    console.log(error);
+
+  });
+
+</script>
+
+</body>
+</html>
