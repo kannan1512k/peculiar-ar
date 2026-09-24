@@ -43,7 +43,6 @@
 
     <video
       id="video1"
-      src="./Vijay1.mp4"
       loop="true"
       crossorigin="anonymous"
       playsinline
@@ -52,7 +51,6 @@
 
     <video
       id="video2"
-      src="./muru.mp4"
       loop="true"
       crossorigin="anonymous"
       playsinline
@@ -66,8 +64,6 @@
     look-controls="enabled: false">
   </a-camera>
 
-
-  <!-- POSTER 1 -->
 
   <a-entity
     id="target1"
@@ -83,8 +79,6 @@
 
   </a-entity>
 
-
-  <!-- POSTER 2 -->
 
   <a-entity
     id="target2"
@@ -115,6 +109,37 @@ const target1 = document.querySelector("#target1");
 const target2 = document.querySelector("#target2");
 
 
+/* LOAD CONTENT DATABASE */
+
+fetch("./content.json")
+  .then(response => response.json())
+  .then(data => {
+
+    data.posters.forEach(poster => {
+
+      if (poster.targetIndex === 0) {
+        video1.src = "./" + poster.video;
+      }
+
+      if (poster.targetIndex === 1) {
+        video2.src = "./" + poster.video;
+      }
+
+    });
+
+    video1.load();
+    video2.load();
+
+  })
+  .catch(error => {
+
+    console.log("Content database error:", error);
+
+  });
+
+
+/* START AR */
+
 startButton.addEventListener("click", async () => {
 
   startButton.style.display = "none";
@@ -126,16 +151,22 @@ startButton.addEventListener("click", async () => {
 });
 
 
+/* POSTER 1 */
+
 target1.addEventListener("targetFound", async () => {
 
   video2.pause();
   video2.currentTime = 0;
 
   try {
+
     video1.currentTime = 0;
     await video1.play();
+
   } catch (error) {
+
     console.log("Video 1 play blocked:", error);
+
   }
 
 });
@@ -148,16 +179,22 @@ target1.addEventListener("targetLost", () => {
 });
 
 
+/* POSTER 2 */
+
 target2.addEventListener("targetFound", async () => {
 
   video1.pause();
   video1.currentTime = 0;
 
   try {
+
     video2.currentTime = 0;
     await video2.play();
+
   } catch (error) {
+
     console.log("Video 2 play blocked:", error);
+
   }
 
 });
