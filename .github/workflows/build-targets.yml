@@ -20,13 +20,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 18
 
       - name: Clone MindAR v1.2.5
         run: |
           git clone --depth 1 --branch v1.2.5 https://github.com/hiukim/mind-ar-js.git mindar
 
-            - name: Install canvas build dependencies
+      - name: Install canvas build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -56,7 +56,6 @@ jobs:
           const outputFile = path.join(repoRoot, 'targets.mind');
 
           async function run() {
-
             const files = fs.readdirSync(targetDir)
               .filter(file => /\.(png|jpg|jpeg|webp)$/i.test(file))
               .sort();
@@ -71,9 +70,7 @@ jobs:
 
             for (const file of files) {
               const imagePath = path.join(targetDir, file);
-
               console.log(`Loading: ${file}`);
-
               images.push(await loadImage(imagePath));
             }
 
@@ -84,9 +81,7 @@ jobs:
             await compiler.compileImageTargets(
               images,
               progress => {
-                console.log(
-                  `Progress: ${progress.toFixed(2)}%`
-                );
+                console.log(`Progress: ${progress.toFixed(2)}%`);
               }
             );
 
