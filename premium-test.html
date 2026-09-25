@@ -1,1299 +1,471 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-  >
-
-  <title>Peculiar AR - Cinematic Test</title>
-
-  <!-- SAME PRODUCTION LIBRARIES -->
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
-
-    html,
     body {
       margin: 0;
-      padding: 0;
-
-      width: 100%;
-      height: 100%;
-
       overflow: hidden;
-
       background: #000;
     }
 
-    body {
-      font-family: Arial, sans-serif;
-    }
-
-
-    /* =====================================================
-       START BUTTON
-       ===================================================== */
-
     #startButton {
       position: fixed;
-
       z-index: 9999;
-
       top: 50%;
       left: 50%;
+      transform: translate(-50%, -50%);
 
-      transform:
-        translate(-50%, -50%);
+      padding: 18px 38px;
 
-      padding: 18px 35px;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 2px;
 
-      font-size: 20px;
+      border: 1px solid #d4af37;
+      border-radius: 50px;
 
-      font-weight: 700;
+      background: #111;
+      color: #d4af37;
 
-      border: none;
+      box-shadow:
+        0 0 20px rgba(212,175,55,0.25);
 
-      border-radius: 12px;
-
-      background: #fff;
-
-      color: #000;
+      cursor: pointer;
     }
-
 
     #loadingText {
       position: fixed;
-
       z-index: 9998;
 
       top: 60%;
       left: 50%;
 
-      transform:
-        translate(-50%, -50%);
+      transform: translate(-50%, -50%);
 
-      color: #fff;
+      color: #d4af37;
 
-      font-size: 16px;
+      font-size: 14px;
+      letter-spacing: 2px;
 
-      display: none;
+      display: block;
+      text-align: center;
     }
-
-
-    /* =====================================================
-       TEST STATUS
-       ===================================================== */
 
     #status {
       position: fixed;
+      z-index: 9997;
 
-      z-index: 9999;
-
-      bottom: 18px;
-
+      bottom: 25px;
       left: 50%;
 
-      transform:
-        translateX(-50%);
+      transform: translateX(-50%);
 
-      color: #fff;
-
-      background:
-        rgba(0,0,0,0.65);
-
-      padding:
-        8px 14px;
-
-      border-radius: 20px;
+      color: #d4af37;
 
       font-size: 12px;
+      letter-spacing: 1.5px;
+
+      text-align: center;
 
       pointer-events: none;
     }
-
-
-    /* =====================================================
-       FULL VIDEO LAYER
-       ===================================================== */
-
-    #fullVideoLayer {
-
-      position: fixed;
-
-      inset: 0;
-
-      z-index: 5000;
-
-      display: none;
-
-      align-items: center;
-
-      justify-content: center;
-
-      /*
-        IMPORTANT:
-        No black background during reveal.
-        Camera remains visible behind it.
-      */
-
-      background: transparent;
-
-      overflow: hidden;
-
-      pointer-events: none;
-
-    }
-
-
-    /* =====================================================
-       VIDEO
-
-       IMPORTANT:
-       The video itself is NOT 100vw x 100vh
-       initially.
-
-       Its actual aspect ratio is calculated
-       by JavaScript.
-       ===================================================== */
-
-    #fullVideo {
-
-      position: absolute;
-
-      left: 50%;
-
-      top: 50%;
-
-      width: auto;
-
-      height: auto;
-
-      max-width: none;
-
-      max-height: none;
-
-      object-fit: contain;
-
-      background: transparent;
-
-      transform:
-        translate(-50%, -50%)
-        scale(0.18);
-
-      transform-origin:
-        center center;
-
-      opacity: 0;
-
-      border-radius: 16px;
-
-      will-change:
-        transform,
-        opacity;
-
-      backface-visibility: hidden;
-
-      -webkit-backface-visibility: hidden;
-
-      transition:
-        transform 4.5s
-        cubic-bezier(
-          0.16,
-          1,
-          0.3,
-          1
-        ),
-
-        opacity 0.3s ease,
-
-        border-radius 4s ease;
-
-    }
-
-
-    /* =====================================================
-       REVEAL
-       ===================================================== */
-
-    #fullVideoLayer.revealing {
-      display: flex;
-    }
-
-
-    #fullVideoLayer.revealing
-    #fullVideo {
-
-      opacity: 1;
-
-    }
-
-
-    /* =====================================================
-       FULL SCREEN
-       ===================================================== */
-
-    #fullVideoLayer.fullscreen {
-
-      background: #000;
-
-      pointer-events: auto;
-
-    }
-
-
-    #fullVideoLayer.fullscreen
-    #fullVideo {
-
-      opacity: 1;
-
-      transform:
-        translate(-50%, -50%)
-        scale(1);
-
-      border-radius: 0;
-
-    }
-
   </style>
-
 </head>
-
 
 <body>
 
+<button id="startButton" disabled>
+  LOADING...
+</button>
 
-  <!-- =====================================================
-       START
-       ===================================================== -->
+<div id="loadingText">
+  LOADING AR EXPERIENCE...
+</div>
 
-  <button
-    id="startButton"
-    disabled
-  >
-    LOADING...
-  </button>
+<div id="status"></div>
 
 
-  <div id="loadingText">
-    Loading AR content...
-  </div>
+<a-scene
+  mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;"
+  color-space="sRGB"
+  renderer="colorManagement: true"
+  vr-mode-ui="enabled: false"
+  device-orientation-permission-ui="enabled: false">
 
+  <a-assets id="videoAssets"></a-assets>
 
-  <div id="status">
-    Preparing AR...
-  </div>
+  <a-camera
+    position="0 0 0"
+    look-controls="enabled: false">
+  </a-camera>
 
+</a-scene>
 
-  <!-- =====================================================
-       FULL SCREEN VIDEO
-       ===================================================== -->
 
-  <div id="fullVideoLayer">
+<script>
 
-    <video
-      id="fullVideo"
+const startButton = document.querySelector("#startButton");
+const loadingText = document.querySelector("#loadingText");
+const status = document.querySelector("#status");
 
-      playsinline
+const scene = document.querySelector("a-scene");
+const videoAssets = document.querySelector("#videoAssets");
 
-      webkit-playsinline
+let videos = [];
+let targetsReady = false;
 
-      preload="auto"
 
-      loop
+/* ================================
+   LOAD CONTENT DATABASE
+================================ */
 
-      crossorigin="anonymous"
-    ></video>
+async function loadContent() {
 
-  </div>
+  try {
 
+    loadingText.style.display = "block";
+    loadingText.textContent = "LOADING AR EXPERIENCE...";
 
-  <!-- =====================================================
-       SAME PRODUCTION AR CORE
-       ===================================================== -->
+    const response = await fetch("./content.json");
 
-  <a-scene
+    if (!response.ok) {
+      throw new Error("Could not load content.json");
+    }
 
-    id="arScene"
+    const data = await response.json();
 
-    mindar-image="
-      imageTargetSrc:
-      ./targets.mind;
-      autoStart:
-      false;
-    "
-
-    color-space="sRGB"
-
-    renderer="
-      colorManagement:
-      true
-    "
-
-    vr-mode-ui="
-      enabled:
-      false
-    "
-
-    device-orientation-permission-ui="
-      enabled:
-      false
-    "
-  >
-
-    <a-assets
-      id="videoAssets"
-    ></a-assets>
-
-
-    <a-camera
-      position="0 0 0"
-      look-controls="
-        enabled:
-        false
-      "
-    ></a-camera>
-
-  </a-scene>
-
-
-  <script>
-
-    /* =====================================================
-       VARIABLES
-       ===================================================== */
-
-    const startButton =
-      document.querySelector(
-        "#startButton"
-      );
-
-
-    const loadingText =
-      document.querySelector(
-        "#loadingText"
-      );
-
-
-    const scene =
-      document.querySelector(
-        "#arScene"
-      );
-
-
-    const videoAssets =
-      document.querySelector(
-        "#videoAssets"
-      );
-
-
-    const status =
-      document.querySelector(
-        "#status"
-      );
-
-
-    const fullVideoLayer =
-      document.querySelector(
-        "#fullVideoLayer"
-      );
-
-
-    const fullVideo =
-      document.querySelector(
-        "#fullVideo"
-      );
-
-
-    let videos = [];
-
-    let targetsReady =
-      false;
-
-    let experienceActive =
-      false;
-
-
-    /* =====================================================
-       LOAD CONTENT
-       ===================================================== */
-
-    async function loadContent() {
-
-      try {
-
-        loadingText.style.display =
-          "block";
-
-
-        const response =
-          await fetch(
-            "./content.json?v=" +
-            Date.now(),
-            {
-              cache:
-                "no-store"
-            }
-          );
-
-
-        if (!response.ok) {
-
-          throw new Error(
-            "Could not load content.json"
-          );
-
-        }
-
-
-        const data =
-          await response.json();
-
-
-        if (
-          !data.posters ||
-          data.posters.length === 0
-        ) {
-
-          throw new Error(
-            "No posters found"
-          );
-
-        }
-
-
-        /* =================================================
-           CREATE POSTERS
-           ================================================= */
-
-        data.posters.forEach(
-          (poster) => {
-
-            const videoId =
-              "video_" +
-              poster.id;
-
-
-            /* =============================================
-               AR VIDEO
-               ============================================= */
-
-            const video =
-              document.createElement(
-                "video"
-              );
-
-
-            video.id =
-              videoId;
-
-
-            video.src =
-              "./" +
-              poster.video;
-
-
-            video.loop =
-              true;
-
-
-            video.crossOrigin =
-              "anonymous";
-
-
-            video.playsInline =
-              true;
-
-
-            video.setAttribute(
-              "webkit-playsinline",
-              ""
-            );
-
-
-            video.preload =
-              "auto";
-
-
-            /*
-              SOUND ON
-            */
-
-            video.muted =
-              false;
-
-
-            videoAssets.appendChild(
-              video
-            );
-
-
-            videos.push(
-              video
-            );
-
-
-            /* =============================================
-               TARGET
-               ============================================= */
-
-            const target =
-              document.createElement(
-                "a-entity"
-              );
-
-
-            target.setAttribute(
-              "mindar-image-target",
-              "targetIndex: " +
-              poster.targetIndex
-            );
-
-
-            /* =============================================
-               AR VIDEO PLANE
-               ============================================= */
-
-            const videoPlane =
-              document.createElement(
-                "a-video"
-              );
-
-
-            videoPlane.setAttribute(
-              "src",
-              "#" +
-              videoId
-            );
-
-
-            videoPlane.setAttribute(
-              "position",
-              "0 0 0"
-            );
-
-
-            videoPlane.setAttribute(
-              "width",
-              "1"
-            );
-
-
-            videoPlane.setAttribute(
-              "height",
-              "1"
-            );
-
-
-            videoPlane.setAttribute(
-              "material",
-              "shader: flat"
-            );
-
-
-            target.appendChild(
-              videoPlane
-            );
-
-
-            scene.appendChild(
-              target
-            );
-
-
-            /* =============================================
-               TARGET FOUND
-               ============================================= */
-
-            target.addEventListener(
-              "targetFound",
-              async () => {
-
-                if (
-                  experienceActive
-                ) {
-
-                  return;
-
-                }
-
-
-                stopOtherVideos(
-                  video
-                );
-
-
-                try {
-
-                  /*
-                    ORIGINAL VIDEO STARTS
-                  */
-
-                  video.currentTime =
-                    0;
-
-
-                  await video.play();
-
-
-                  status.textContent =
-                    "Video playing...";
-
-
-                  /*
-                    Wait for video to
-                    actually render.
-                  */
-
-                  await waitForFrames(
-                    2
-                  );
-
-
-                  /*
-                    START HAND-OFF
-                  */
-
-                  await startVideoReveal(
-                    video
-                  );
-
-
-                } catch (error) {
-
-                  console.error(
-                    "Video play error:",
-                    error
-                  );
-
-
-                  status.textContent =
-                    "Video playback error";
-
-                }
-
-              }
-            );
-
-
-            /* =============================================
-               TARGET LOST
-               ============================================= */
-
-            target.addEventListener(
-              "targetLost",
-              () => {
-
-                /*
-                  Once full-screen hand-off
-                  begins, camera tracking
-                  must NOT stop the video.
-                */
-
-                if (
-                  experienceActive
-                ) {
-
-                  return;
-
-                }
-
-
-                video.pause();
-
-              }
-            );
-
-          }
-        );
-
-
-        targetsReady =
-          true;
-
-
-        loadingText.style.display =
-          "none";
-
-
-        startButton.disabled =
-          false;
-
-
-        startButton.textContent =
-          "START AR";
-
-
-        status.textContent =
-          "AR Ready";
-
-
-      } catch (error) {
-
-        console.error(
-          "Content error:",
-          error
-        );
-
-
-        loadingText.textContent =
-          "Failed to load AR content.";
-
-      }
-
+    if (!data.posters || data.posters.length === 0) {
+      throw new Error("No posters found in content.json");
     }
 
 
-    /* =====================================================
-       STOP OTHER VIDEOS
-       ===================================================== */
+    /* ================================
+       CREATE VIDEOS + TARGETS
+    ================================= */
 
-    function stopOtherVideos(
-      currentVideo
-    ) {
+    data.posters.forEach(poster => {
 
-      videos.forEach(
-        (video) => {
+      const videoId = "video_" + poster.id;
 
-          if (
-            video !== currentVideo
-          ) {
 
-            video.pause();
+      /* CREATE VIDEO */
 
-            video.currentTime =
-              0;
+      const video = document.createElement("video");
 
-          }
+      video.id = videoId;
 
-        }
-      );
+      video.src = "./" + poster.video;
 
-    }
+      video.loop = true;
 
+      video.crossOrigin = "anonymous";
 
-    /* =====================================================
-       WAIT FRAMES
-       ===================================================== */
+      video.playsInline = true;
 
-    function waitForFrames(
-      count
-    ) {
-
-      return new Promise(
-        (resolve) => {
-
-          let remaining =
-            count;
-
-
-          function frame() {
-
-            remaining--;
-
-
-            if (
-              remaining <= 0
-            ) {
-
-              resolve();
-
-              return;
-
-            }
-
-
-            requestAnimationFrame(
-              frame
-            );
-
-          }
-
-
-          requestAnimationFrame(
-            frame
-          );
-
-        }
-      );
-
-    }
-
-
-    /* =====================================================
-       VIDEO READY
-       ===================================================== */
-
-    function waitForVideoReady(
-      video
-    ) {
-
-      return new Promise(
-        (resolve) => {
-
-          if (
-            video.readyState >= 2
-          ) {
-
-            resolve();
-
-            return;
-
-          }
-
-
-          let finished =
-            false;
-
-
-          function finish() {
-
-            if (
-              finished
-            ) {
-
-              return;
-
-            }
-
-
-            finished =
-              true;
-
-
-            resolve();
-
-          }
-
-
-          video.addEventListener(
-            "loadeddata",
-            finish,
-            {
-              once: true
-            }
-          );
-
-
-          video.addEventListener(
-            "canplay",
-            finish,
-            {
-              once: true
-            }
-          );
-
-
-          setTimeout(
-            finish,
-            3000
-          );
-
-        }
-      );
-
-    }
-
-
-    /* =====================================================
-       REAL VIDEO FRAME
-       ===================================================== */
-
-    function waitForRealFrame(
-      video
-    ) {
-
-      return new Promise(
-        (resolve) => {
-
-          let finished =
-            false;
-
-
-          function finish() {
-
-            if (
-              finished
-            ) {
-
-              return;
-
-            }
-
-
-            finished =
-              true;
-
-
-            resolve();
-
-          }
-
-
-          if (
-            "requestVideoFrameCallback"
-            in video
-          ) {
-
-            video.requestVideoFrameCallback(
-              () => finish()
-            );
-
-          } else {
-
-            requestAnimationFrame(
-              () => {
-
-                requestAnimationFrame(
-                  () => finish()
-                );
-
-              }
-            );
-
-          }
-
-
-          setTimeout(
-            finish,
-            1500
-          );
-
-        }
-      );
-
-    }
-
-
-    /* =====================================================
-       CALCULATE VIDEO SIZE
-       ===================================================== */
-
-    function setVideoSize(
-      video
-    ) {
-
-      if (
-        !video.videoWidth ||
-        !video.videoHeight
-      ) {
-
-        return;
-
-      }
-
-
-      const vw =
-        video.videoWidth;
-
-
-      const vh =
-        video.videoHeight;
-
-
-      const viewportWidth =
-        window.innerWidth;
-
-
-      const viewportHeight =
-        window.innerHeight;
-
-
-      const videoRatio =
-        vw / vh;
-
-
-      const viewportRatio =
-        viewportWidth /
-        viewportHeight;
-
-
-      let width;
-
-      let height;
-
-
-      /*
-        CONTAIN:
-
-        Portrait video:
-        fit to height.
-
-        Landscape video:
-        fit to width.
-      */
-
-      if (
-        videoRatio >
-        viewportRatio
-      ) {
-
-        width =
-          viewportWidth;
-
-        height =
-          width /
-          videoRatio;
-
-      } else {
-
-        height =
-          viewportHeight;
-
-        width =
-          height *
-          videoRatio;
-
-      }
-
-
-      video.style.width =
-        width + "px";
-
-
-      video.style.height =
-        height + "px";
-
-    }
-
-
-    /* =====================================================
-       START VIDEO REVEAL
-       ===================================================== */
-
-    async function startVideoReveal(
-      sourceVideo
-    ) {
-
-      if (
-        experienceActive
-      ) {
-
-        return;
-
-      }
-
-
-      /*
-        Lock the experience.
-      */
-
-      experienceActive =
-        true;
-
-
-      status.textContent =
-        "Preparing cinematic reveal...";
-
-
-      const source =
-        sourceVideo.currentSrc ||
-        sourceVideo.src;
-
-
-      /*
-        ================================================
-        PREPARE FULL VIDEO
-        ================================================
-      */
-
-      fullVideo.pause();
-
-
-      fullVideo.removeAttribute(
-        "src"
-      );
-
-
-      fullVideo.load();
-
-
-      fullVideo.src =
-        source;
-
-
-      fullVideo.loop =
-        true;
-
-
-      fullVideo.playsInline =
-        true;
-
-
-      fullVideo.setAttribute(
-        "playsinline",
-        ""
-      );
-
-
-      fullVideo.setAttribute(
+      video.setAttribute(
         "webkit-playsinline",
         ""
       );
 
+      videoAssets.appendChild(video);
 
-      /*
-        VERY IMPORTANT:
-        Do NOT mute.
-      */
-
-      fullVideo.muted =
-        false;
+      videos.push(video);
 
 
-      fullVideo.currentTime =
-        0;
+      /* CREATE TARGET */
 
+      const target = document.createElement("a-entity");
 
-      /*
-        Wait for dimensions.
-      */
-
-      await waitForVideoReady(
-        fullVideo
+      target.setAttribute(
+        "mindar-image-target",
+        "targetIndex: " + poster.targetIndex
       );
 
 
+      /* CREATE VIDEO PLANE */
+
+      const videoPlane = document.createElement("a-video");
+
+      videoPlane.setAttribute(
+        "src",
+        "#" + videoId
+      );
+
+      videoPlane.setAttribute(
+        "position",
+        "0 0 0"
+      );
+
+      videoPlane.setAttribute(
+        "width",
+        "1"
+      );
+
+      videoPlane.setAttribute(
+        "height",
+        "1"
+      );
+
+      videoPlane.setAttribute(
+        "material",
+        "shader: flat"
+      );
+
       /*
-        Set actual video dimensions.
+        Start at normal poster size.
+        We only animate this existing AR video.
       */
 
-      setVideoSize(
-        fullVideo
+      videoPlane.setAttribute(
+        "scale",
+        "1 1 1"
       );
 
 
-      /*
-        Small video appears over
-        the camera.
-      */
+      target.appendChild(videoPlane);
 
-      fullVideoLayer.style.display =
-        "flex";
+      scene.appendChild(target);
 
 
-      fullVideoLayer.classList.add(
-        "revealing"
-      );
+      /* ================================
+         TARGET FOUND
+      ================================= */
 
+      target.addEventListener(
+        "targetFound",
+        async () => {
 
-      fullVideoLayer.classList.remove(
-        "fullscreen"
-      );
-
-
-      /*
-        Force layout.
-      */
-
-      void fullVideo.offsetWidth;
-
-
-      /*
-        ================================================
-        START FULL VIDEO
-        ================================================
-      */
-
-      try {
-
-        await fullVideo.play();
-
-      } catch (error) {
-
-        console.error(
-          "Full video play failed:",
-          error
-        );
-
-
-        /*
-          Return safely.
-        */
-
-        experienceActive =
-          false;
-
-
-        fullVideoLayer.style.display =
-          "none";
-
-
-        status.textContent =
-          "Original video playing";
-
-        return;
-
-      }
-
-
-      await waitForRealFrame(
-        fullVideo
-      );
-
-
-      await waitForFrames(
-        2
-      );
-
-
-      /*
-        ================================================
-        SINGLE AUDIO SOURCE
-        ================================================
-
-        Full-screen video is now playing.
-
-        Immediately stop the AR video's
-        audio/video.
-
-        This prevents DOUBLE SOUND.
-      */
-
-      sourceVideo.pause();
-
-      sourceVideo.muted =
-        true;
-
-
-      /*
-        ================================================
-        START CINEMATIC ZOOM
-        ================================================
-      */
-
-      status.textContent =
-        "Cinematic zoom...";
-
-
-      fullVideoLayer.classList.add(
-        "fullscreen"
-      );
-
-
-      /*
-        After zoom:
-        full video continues independently.
-      */
-
-      setTimeout(
-        () => {
+          console.log(
+            "TARGET FOUND:",
+            poster.id
+          );
 
           status.textContent =
-            "Full screen — video playing";
+            "✦ EXPERIENCE ACTIVATED ✦";
 
-        },
-        4600
+
+          stopOtherVideos(video);
+
+
+          try {
+
+            /*
+              Start the original AR video.
+              No second video is created.
+            */
+
+            video.currentTime = 0;
+
+            await video.play();
+
+
+            /*
+              Reset scale
+            */
+
+            videoPlane.object3D.scale.set(
+              1,
+              1,
+              1
+            );
+
+
+            /*
+              Smooth cinematic zoom
+            */
+
+            videoPlane.setAttribute(
+              "animation__zoom",
+              {
+                property: "scale",
+                from: "1 1 1",
+                to: "2.5 2.5 2.5",
+                dur: 4500,
+                easing: "easeInOutCubic"
+              }
+            );
+
+
+          } catch (error) {
+
+            console.log(
+              "Video play blocked:",
+              poster.id,
+              error
+            );
+
+          }
+
+        }
       );
+
+
+      /* ================================
+         TARGET LOST
+      ================================= */
+
+      target.addEventListener(
+        "targetLost",
+        () => {
+
+          console.log(
+            "TARGET LOST:",
+            poster.id
+          );
+
+          /*
+            Stop the existing AR video.
+          */
+
+          video.pause();
+
+          /*
+            Reset zoom.
+          */
+
+          videoPlane.removeAttribute(
+            "animation__zoom"
+          );
+
+          videoPlane.object3D.scale.set(
+            1,
+            1,
+            1
+          );
+
+          status.textContent = "";
+
+        }
+      );
+
+    });
+
+
+    /* ================================
+       READY
+    ================================= */
+
+    targetsReady = true;
+
+    loadingText.style.display = "none";
+
+    startButton.disabled = false;
+
+    startButton.textContent =
+      "START AR";
+
+
+    console.log(
+      "AR content loaded:",
+      data.posters.length,
+      "posters"
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "Content database error:",
+      error
+    );
+
+    loadingText.textContent =
+      "FAILED TO LOAD AR";
+
+    startButton.disabled = true;
+
+  }
+
+}
+
+
+/* ================================
+   STOP OTHER VIDEOS
+================================ */
+
+function stopOtherVideos(currentVideo) {
+
+  videos.forEach(video => {
+
+    if (video !== currentVideo) {
+
+      video.pause();
+
+      video.currentTime = 0;
 
     }
 
+  });
 
-    /* =====================================================
-       START AR
-       ===================================================== */
+}
 
-    startButton.addEvent
+
+/* ================================
+   START AR
+================================ */
+
+startButton.addEventListener(
+  "click",
+  async () => {
+
+    if (!targetsReady) {
+      return;
+    }
+
+    startButton.style.display = "none";
+
+    loadingText.style.display = "none";
+
+    status.textContent =
+      "STARTING CAMERA...";
+
+
+    const arSystem =
+      scene.systems["mindar-image-system"];
+
+
+    try {
+
+      await arSystem.start();
+
+      status.textContent =
+        "POINT CAMERA AT YOUR POSTER";
+
+
+    } catch (error) {
+
+      console.error(
+        "AR start error:",
+        error
+      );
+
+      startButton.style.display =
+        "block";
+
+      startButton.textContent =
+        "START AR";
+
+      status.textContent =
+        "CAMERA START FAILED";
+
+    }
+
+  }
+);
+
+
+/* ================================
+   LOAD CONTENT
+================================ */
+
+loadContent();
+
+</script>
+
+</body>
+</html>
