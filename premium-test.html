@@ -2,234 +2,282 @@
 <html>
 <head>
 
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
 
-  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+<script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
 
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
 
-  <style>
+<style>
 
-    * {
-      box-sizing: border-box;
-    }
+* {
+  box-sizing: border-box;
+}
 
-    html,
-    body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #000;
-    }
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+}
 
 
-    /* ================================
-       START BUTTON
-    ================================= */
+/* =================================
+   START BUTTON
+================================= */
 
-    #startButton {
+#startButton {
 
-      position: fixed;
+  position: fixed;
 
-      z-index: 9999;
+  z-index: 9999;
 
-      top: 50%;
-      left: 50%;
+  top: 50%;
+  left: 50%;
 
-      transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
 
-      padding: 18px 38px;
+  padding: 18px 38px;
 
-      font-size: 18px;
-      font-weight: 600;
+  font-size: 18px;
 
-      letter-spacing: 2px;
+  font-weight: 600;
 
-      border: 1px solid #d4af37;
+  letter-spacing: 2px;
 
-      border-radius: 50px;
+  border: 1px solid #d4af37;
 
-      background: #111;
+  border-radius: 50px;
 
-      color: #d4af37;
+  background: #111;
 
-      box-shadow:
-        0 0 20px rgba(212,175,55,0.25);
+  color: #d4af37;
 
-      cursor: pointer;
-    }
+  box-shadow:
+    0 0 20px rgba(212,175,55,0.25);
 
+  cursor: pointer;
+}
 
-    /* ================================
-       LOADING
-    ================================= */
 
-    #loadingText {
+/* =================================
+   LOADING
+================================= */
 
-      position: fixed;
+#loadingText {
 
-      z-index: 9998;
+  position: fixed;
 
-      top: 60%;
-      left: 50%;
+  z-index: 9998;
 
-      transform: translate(-50%, -50%);
+  top: 60%;
+  left: 50%;
 
-      color: #d4af37;
+  transform: translate(-50%, -50%);
 
-      font-size: 14px;
+  color: #d4af37;
 
-      letter-spacing: 2px;
+  font-size: 14px;
 
-      text-align: center;
-    }
+  letter-spacing: 2px;
 
+  text-align: center;
+}
 
-    /* ================================
-       STATUS
-    ================================= */
 
-    #status {
+/* =================================
+   STATUS
+================================= */
 
-      position: fixed;
+#status {
 
-      z-index: 9997;
+  position: fixed;
 
-      bottom: 25px;
-      left: 50%;
+  z-index: 9997;
 
-      transform: translateX(-50%);
+  bottom: 25px;
 
-      color: #d4af37;
+  left: 50%;
 
-      font-size: 12px;
+  transform: translateX(-50%);
 
-      letter-spacing: 1.5px;
+  color: #d4af37;
 
-      text-align: center;
+  font-size: 12px;
 
-      pointer-events: none;
-    }
+  letter-spacing: 1.5px;
 
+  text-align: center;
 
-    /* ================================
-       FULLSCREEN EXPERIENCE
-    ================================= */
+  pointer-events: none;
+}
 
-    #experience {
 
-      position: fixed;
+/* =================================
+   EXPERIENCE LAYER
 
-      inset: 0;
+   IMPORTANT:
+   Transparent while zooming.
+   So camera remains visible.
+================================= */
 
-      z-index: 10000;
+#experience {
 
-      display: none;
+  position: fixed;
 
-      background: #000;
+  inset: 0;
 
-      overflow: hidden;
+  z-index: 10000;
 
-      align-items: center;
+  display: none;
 
-      justify-content: center;
-    }
+  background: transparent;
 
+  overflow: hidden;
 
-    #experienceVideo {
+  align-items: center;
 
-      position: absolute;
+  justify-content: center;
 
-      left: 50%;
-      top: 50%;
+  pointer-events: none;
 
-      width: 100vw;
-      height: 100vh;
+  transition:
+    background 0.5s ease;
+}
 
-      object-fit: contain;
 
-      transform:
-        translate(-50%, -50%)
-        scale(0.18);
+/*
+  During cinematic zoom,
+  keep camera visible.
+*/
 
-      opacity: 0;
+#experience.zooming {
 
-      background: #000;
+  display: flex;
 
-      transition:
-        transform 4.5s
-        cubic-bezier(0.22, 1, 0.36, 1),
+  background: transparent;
+}
 
-        opacity 0.35s ease;
-    }
 
+/*
+  Once full screen is reached,
+  black background is allowed.
+*/
 
-    /*
-      Video becomes full screen.
-    */
+#experience.fullscreen {
 
-    #experience.zoomed #experienceVideo {
+  background: #000;
+}
 
-      transform:
-        translate(-50%, -50%)
-        scale(1);
 
-      opacity: 1;
-    }
+/* =================================
+   EXPERIENCE VIDEO
+================================= */
 
+#experienceVideo {
 
-    /* ================================
-       CLOSE BUTTON
-    ================================= */
+  position: fixed;
 
-    #closeButton {
+  left: 50%;
 
-      position: fixed;
+  top: 50%;
 
-      z-index: 10002;
+  width: 100vw;
 
-      top: 18px;
-      right: 18px;
+  height: 100vh;
 
-      width: 46px;
-      height: 46px;
+  object-fit: contain;
 
-      border-radius: 50%;
+  transform:
+    translate(-50%, -50%)
+    scale(0.12);
 
-      border: 1px solid
-        rgba(212,175,55,0.8);
+  transform-origin: center center;
 
-      background:
-        rgba(0,0,0,0.65);
+  opacity: 1;
 
-      color: #d4af37;
+  background: transparent;
 
-      font-size: 25px;
+  transition:
+    transform 4.5s
+    cubic-bezier(0.22, 1, 0.36, 1);
 
-      line-height: 42px;
+  pointer-events: none;
+}
 
-      text-align: center;
 
-      cursor: pointer;
+/*
+  Smooth cinematic expansion.
+*/
 
-      display: none;
+#experience.zooming #experienceVideo {
 
-      backdrop-filter: blur(8px);
+  transform:
+    translate(-50%, -50%)
+    scale(1);
+}
 
-      -webkit-backdrop-filter: blur(8px);
-    }
 
+/* =================================
+   CLOSE BUTTON
+================================= */
 
-    #experience.showClose #closeButton {
+#closeButton {
 
-      display: block;
-    }
+  position: fixed;
 
-  </style>
+  z-index: 10002;
+
+  top: 14px;
+
+  right: 14px;
+
+  width: 34px;
+
+  height: 34px;
+
+  padding: 0;
+
+  border-radius: 50%;
+
+  border: 1px solid
+    rgba(212,175,55,0.75);
+
+  background:
+    rgba(0,0,0,0.65);
+
+  color: #d4af37;
+
+  font-size: 19px;
+
+  font-weight: 300;
+
+  line-height: 30px;
+
+  text-align: center;
+
+  cursor: pointer;
+
+  display: none;
+
+  backdrop-filter: blur(8px);
+
+  -webkit-backdrop-filter: blur(8px);
+}
+
+
+#experience.showClose
+#closeButton {
+
+  display: block;
+}
+
+</style>
 
 </head>
 
@@ -237,7 +285,7 @@
 <body>
 
 
-<!-- ================================
+<!-- =================================
      START
 ================================= -->
 
@@ -260,19 +308,11 @@
 <div id="status"></div>
 
 
-<!-- ================================
-     INDEPENDENT VIDEO EXPERIENCE
+<!-- =================================
+     INDEPENDENT EXPERIENCE
 ================================= -->
 
 <div id="experience">
-
-  <video
-    id="experienceVideo"
-    playsinline
-    webkit-playsinline
-    loop>
-  </video>
-
 
   <button
     id="closeButton"
@@ -285,7 +325,7 @@
 </div>
 
 
-<!-- ================================
+<!-- =================================
      AR SCENE
 ================================= -->
 
@@ -311,7 +351,9 @@
   ">
 
 
-  <a-assets id="videoAssets"></a-assets>
+  <a-assets
+    id="videoAssets">
+  </a-assets>
 
 
   <a-camera
@@ -371,12 +413,6 @@ const experience =
   );
 
 
-const experienceVideo =
-  document.querySelector(
-    "#experienceVideo"
-  );
-
-
 const closeButton =
   document.querySelector(
     "#closeButton"
@@ -393,7 +429,9 @@ let targetsReady = false;
 
 let experienceActive = false;
 
-let currentSourceVideo = null;
+let currentVideo = null;
+
+let currentPlane = null;
 
 
 /* =================================
@@ -443,7 +481,7 @@ async function loadContent() {
 
 
     /* =================================
-       CREATE EVERY POSTER
+       CREATE POSTERS
     ================================= */
 
     data.posters.forEach(
@@ -455,7 +493,7 @@ async function loadContent() {
 
 
         /* ================================
-           SOURCE VIDEO
+           VIDEO
         ================================= */
 
         const video =
@@ -488,6 +526,14 @@ async function loadContent() {
           "webkit-playsinline",
           ""
         );
+
+
+        /*
+          Keep video ready in memory.
+        */
+
+        video.preload =
+          "auto";
 
 
         videoAssets.appendChild(
@@ -579,9 +625,8 @@ async function loadContent() {
 
 
             /*
-              If another experience is
-              already running, ignore
-              tracking completely.
+              Ignore new tracking once
+              an experience is active.
             */
 
             if (
@@ -604,14 +649,19 @@ async function loadContent() {
             );
 
 
+            currentVideo =
+              video;
+
+
+            currentPlane =
+              videoPlane;
+
+
             try {
 
 
               /*
-                Start source video.
-
-                This is what gives us
-                immediate playback.
+                Start immediately.
               */
 
               video.currentTime =
@@ -622,15 +672,18 @@ async function loadContent() {
 
 
               /*
-                Immediately hand over
-                to independent video.
+                IMPORTANT:
 
-                NO 4.5 second wait.
-                NO waiting for poster.
+                Immediately detach visual
+                control from poster.
+
+                The AR camera remains
+                visible underneath.
               */
 
               await launchExperience(
-                video
+                video,
+                videoPlane
               );
 
 
@@ -658,9 +711,8 @@ async function loadContent() {
 
 
             /*
-              Once fullscreen experience
-              starts, poster tracking has
-              ZERO control over the video.
+              After launch, targetLost
+              MUST NOT stop anything.
             */
 
             if (
@@ -730,20 +782,23 @@ async function loadContent() {
 ================================= */
 
 function stopOtherVideos(
-  currentVideo
+  current
 ) {
 
   videos.forEach(
     video => {
 
       if (
-        video !== currentVideo
+        video !== current
       ) {
 
         video.pause();
 
         video.currentTime =
           0;
+
+        video.muted =
+          false;
 
       }
 
@@ -754,11 +809,12 @@ function stopOtherVideos(
 
 
 /* =================================
-   LAUNCH INDEPENDENT VIDEO
+   LAUNCH EXPERIENCE
 ================================= */
 
 async function launchExperience(
-  sourceVideo
+  sourceVideo,
+  videoPlane
 ) {
 
 
@@ -772,141 +828,106 @@ async function launchExperience(
 
 
   /*
-    LOCK EXPERIENCE.
+    LOCK EXPERIENCE IMMEDIATELY.
 
-    From this point:
-    poster movement,
-    poster loss,
-    camera movement
-
-    CANNOT stop the video.
+    Poster tracking can no longer
+    control the experience.
   */
 
   experienceActive =
     true;
 
 
-  currentSourceVideo =
-    sourceVideo;
+  /*
+    Mute source only after playback
+    has started, preventing double sound.
+  */
 
-
-  status.textContent =
-    "✦ EXPERIENCE ACTIVATED ✦";
+  sourceVideo.muted =
+    false;
 
 
   /*
-    Copy same video source.
+    The SAME video element becomes
+    the fullscreen video.
+
+    No second video.
+    No new download.
+    No loading delay.
   */
 
-  experienceVideo.src =
-    sourceVideo.currentSrc ||
-    sourceVideo.src;
-
-
-  experienceVideo.loop =
-    true;
-
-
-  experienceVideo.playsInline =
-    true;
-
-
-  experienceVideo.setAttribute(
-    "webkit-playsinline",
-    ""
+  experienceVideoFromSource(
+    sourceVideo
   );
 
 
   /*
-    Sync exact playback position.
-
-    So fullscreen does NOT restart
-    from the beginning.
+    Hide AR plane visually.
   */
 
-  try {
-
-    experienceVideo.currentTime =
-      sourceVideo.currentTime;
-
-  } catch (error) {}
+  videoPlane.setAttribute(
+    "visible",
+    "false"
+  );
 
 
   /*
-    Prepare fullscreen layer.
+    Show cinematic layer.
   */
 
   experience.style.display =
     "flex";
 
 
-  /*
-    IMPORTANT:
-
-    Mute source BEFORE fullscreen
-    starts to prevent double sound.
-  */
-
-  sourceVideo.muted =
-    true;
-
-
-  /*
-    Start independent video
-    immediately.
-  */
-
-  try {
-
-    await experienceVideo.play();
-
-  } catch (error) {
-
-    console.error(
-      "Fullscreen video failed:",
-      error
-    );
-
-
-    /*
-      Fallback.
-    */
-
-    sourceVideo.muted =
-      false;
-
-    experienceActive =
-      false;
-
-    experience.style.display =
-      "none";
-
-    return;
-
-  }
-
-
-  /*
-    Show the video immediately.
-  */
-
   experience.classList.add(
-    "zoomed"
+    "zooming"
   );
 
+
+  /*
+    Small delay so browser can
+    render the video before animation.
+  */
+
+  requestAnimationFrame(
+    () => {
+
+      requestAnimationFrame(
+        () => {
+
+          experience.classList.add(
+            "fullscreen"
+          );
+
+        }
+      );
+
+    }
+  );
+
+
+  /*
+    Close button available
+    immediately.
+  */
 
   experience.classList.add(
     "showClose"
   );
 
 
+  status.textContent =
+    "✦ ENJOY THE EXPERIENCE ✦";
+
+
   /*
-    NOW stop the camera/AR system.
+    IMPORTANT:
 
-    This is the key change.
+    Stop MindAR AFTER the source
+    video has already started.
 
-    Poster tracking is completely
-    disconnected after scan.
+    This removes poster tracking
+    while keeping the video alive.
   */
 
   try {
@@ -931,26 +952,115 @@ async function launchExperience(
 
 
   /*
-    Stop the old AR video.
-
-    Fullscreen video is now the
-    ONLY video playing.
+    The video continues because
+    the SAME HTML video element is
+    now being displayed independently.
   */
 
-  sourceVideo.pause();
+}
 
 
-  status.textContent =
-    "✦ ENJOY THE EXPERIENCE ✦";
+/* =================================
+   MOVE SOURCE VIDEO TO SCREEN
+================================= */
+
+function experienceVideoFromSource(
+  sourceVideo
+) {
 
 
-  console.log(
-    "AR tracking stopped."
+  /*
+    Move the already-playing video
+    out of A-Frame assets.
+
+    This avoids creating/loading
+    another video.
+  */
+
+  document.body.appendChild(
+    sourceVideo
   );
 
 
-  console.log(
-    "Independent fullscreen video running."
+  /*
+    HTML video becomes fullscreen.
+  */
+
+  sourceVideo.style.position =
+    "fixed";
+
+
+  sourceVideo.style.left =
+    "50%";
+
+
+  sourceVideo.style.top =
+    "50%";
+
+
+  sourceVideo.style.width =
+    "100vw";
+
+
+  sourceVideo.style.height =
+    "100vh";
+
+
+  sourceVideo.style.objectFit =
+    "contain";
+
+
+  sourceVideo.style.transform =
+    "translate(-50%, -50%)";
+
+
+  sourceVideo.style.zIndex =
+    "10001";
+
+
+  sourceVideo.style.display =
+    "block";
+
+
+  sourceVideo.style.opacity =
+    "1";
+
+
+  sourceVideo.style.background =
+    "transparent";
+
+
+  sourceVideo.style.transition =
+    "transform 4.5s cubic-bezier(0.22,1,0.36,1)";
+
+
+  /*
+    Start small.
+  */
+
+  sourceVideo.style.transform =
+    "translate(-50%, -50%) scale(0.12)";
+
+
+  /*
+    Force browser to notice
+    the initial state.
+  */
+
+  void sourceVideo.offsetWidth;
+
+
+  /*
+    Cinematic expansion.
+  */
+
+  requestAnimationFrame(
+    () => {
+
+      sourceVideo.style.transform =
+        "translate(-50%, -50%) scale(1)";
+
+    }
   );
 
 }
@@ -966,31 +1076,98 @@ closeButton.addEventListener(
   async () => {
 
 
-    /*
-      Stop fullscreen video.
-    */
-
-    experienceVideo.pause();
-
-
-    /*
-      Remove source.
-    */
-
-    experienceVideo.removeAttribute(
-      "src"
+    console.log(
+      "Closing experience"
     );
 
 
-    experienceVideo.load();
+    /*
+      Stop current video.
+    */
+
+    if (
+      currentVideo
+    ) {
+
+      currentVideo.pause();
+
+      currentVideo.currentTime =
+        0;
+
+      currentVideo.muted =
+        false;
+
+
+      /*
+        Return video to A-Frame assets.
+      */
+
+      videoAssets.appendChild(
+        currentVideo
+      );
+
+
+      currentVideo.style.position =
+        "";
+
+
+      currentVideo.style.left =
+        "";
+
+
+      currentVideo.style.top =
+        "";
+
+
+      currentVideo.style.width =
+        "";
+
+
+      currentVideo.style.height =
+        "";
+
+
+      currentVideo.style.objectFit =
+        "";
+
+
+      currentVideo.style.transform =
+        "";
+
+
+      currentVideo.style.zIndex =
+        "";
+
+
+      currentVideo.style.display =
+        "";
+
+
+      currentVideo.style.opacity =
+        "";
+
+
+      currentVideo.style.background =
+        "";
+
+
+      currentVideo.style.transition =
+        "";
+
+    }
 
 
     /*
-      Hide fullscreen.
+      Hide experience layer.
     */
 
     experience.classList.remove(
-      "zoomed"
+      "zooming"
+    );
+
+
+    experience.classList.remove(
+      "fullscreen"
     );
 
 
@@ -1004,6 +1181,22 @@ closeButton.addEventListener(
 
 
     /*
+      Restore AR plane.
+    */
+
+    if (
+      currentPlane
+    ) {
+
+      currentPlane.setAttribute(
+        "visible",
+        "true"
+      );
+
+    }
+
+
+    /*
       Reset state.
     */
 
@@ -1011,7 +1204,11 @@ closeButton.addEventListener(
       false;
 
 
-    currentSourceVideo =
+    currentVideo =
+      null;
+
+
+    currentPlane =
       null;
 
 
@@ -1020,28 +1217,7 @@ closeButton.addEventListener(
 
 
     /*
-      Reset source videos.
-    */
-
-    videos.forEach(
-      video => {
-
-        video.pause();
-
-        video.currentTime =
-          0;
-
-        video.muted =
-          false;
-
-      }
-    );
-
-
-    /*
-      Restart AR camera.
-
-      User can scan another poster.
+      Restart camera.
     */
 
     try {
