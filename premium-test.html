@@ -29,7 +29,6 @@
       font-family: Arial, sans-serif;
     }
 
-    /* SAME BASIC START BUTTON */
     #startButton {
       position: fixed;
       z-index: 9999;
@@ -69,108 +68,11 @@
       font-size: 16px;
 
       display: none;
-
-      text-align: center;
-      white-space: nowrap;
     }
-
 
     /*
-      =========================================================
-      CINEMATIC REVEAL
-      =========================================================
-
-      IMPORTANT:
-      This is completely hidden initially.
-
-      Therefore it cannot block the camera preview.
+      Small status for testing only.
     */
-
-    #cinematicLayer {
-      position: fixed;
-
-      inset: 0;
-
-      z-index: 8000;
-
-      display: none;
-
-      align-items: center;
-      justify-content: center;
-
-      background: #000;
-
-      overflow: hidden;
-
-      pointer-events: none;
-    }
-
-
-    #cinematicVideo {
-      position: absolute;
-
-      left: 50%;
-      top: 50%;
-
-      width: 100vw;
-      height: 100vh;
-
-      object-fit: contain;
-
-      transform:
-        translate(-50%, -50%)
-        scale(0.12);
-
-      transform-origin: center center;
-
-      opacity: 0;
-
-      background: #000;
-
-      border-radius: 18px;
-
-      will-change:
-        transform,
-        opacity;
-
-      backface-visibility: hidden;
-
-      -webkit-backface-visibility: hidden;
-
-      /*
-        Slow cinematic movement.
-      */
-      transition:
-        transform 4.2s cubic-bezier(0.16, 1, 0.3, 1),
-        opacity 0.25s ease-out,
-        border-radius 3.8s ease;
-    }
-
-
-    /*
-      Animation begins ONLY after
-      video has successfully started.
-    */
-
-    #cinematicLayer.playing #cinematicVideo {
-      opacity: 1;
-
-      transform:
-        translate(-50%, -50%)
-        scale(0.12);
-    }
-
-
-    #cinematicLayer.zooming #cinematicVideo {
-      opacity: 1;
-
-      transform:
-        translate(-50%, -50%)
-        scale(1);
-
-      border-radius: 0;
-    }
-
 
     #testStatus {
       position: fixed;
@@ -180,7 +82,7 @@
 
       transform: translateX(-50%);
 
-      z-index: 10000;
+      z-index: 9999;
 
       padding: 7px 13px;
 
@@ -196,51 +98,29 @@
 
       opacity: 0.75;
     }
+
+    /*
+      The AR video plane itself is animated.
+      NO SECOND VIDEO ELEMENT.
+    */
+
+    #cinematicTarget {
+      opacity: 0;
+      pointer-events: none;
+    }
   </style>
 </head>
 
-
 <body>
 
-
-  <!-- SAME START BUTTON -->
+  <!-- SAME BASIC START BUTTON -->
   <button id="startButton" disabled>
     LOADING...
   </button>
 
-
   <div id="loadingText">
     Loading AR content...
   </div>
-
-
-  <!--
-    =========================================================
-    CINEMATIC VIDEO LAYER
-    =========================================================
-
-    Hidden until targetFound.
-  -->
-
-  <div id="cinematicLayer">
-
-    <video
-      id="cinematicVideo"
-
-      playsinline
-      webkit-playsinline
-
-      preload="auto"
-
-      loop
-
-      controls="false"
-
-      crossorigin="anonymous"
-    ></video>
-
-  </div>
-
 
   <div id="testStatus">
     Preparing AR...
@@ -254,6 +134,8 @@
   -->
 
   <a-scene
+    id="arScene"
+
     mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;"
 
     color-space="sRGB"
@@ -290,16 +172,10 @@
       document.querySelector("#loadingText");
 
     const scene =
-      document.querySelector("a-scene");
+      document.querySelector("#arScene");
 
     const videoAssets =
       document.querySelector("#videoAssets");
-
-    const cinematicLayer =
-      document.querySelector("#cinematicLayer");
-
-    const cinematicVideo =
-      document.querySelector("#cinematicVideo");
 
     const testStatus =
       document.querySelector("#testStatus");
@@ -310,6 +186,10 @@
     let targetsReady = false;
 
     let cinematicActive = false;
+
+    let activeVideoPlane = null;
+
+    let activeVideo = null;
 
 
     /*
@@ -325,11 +205,6 @@
         loadingText.style.display =
           "block";
 
-
-        /*
-          Cache bust only for content.json.
-          Production file itself is untouched.
-        */
 
         const response =
           await fetch(
@@ -367,20 +242,21 @@
 
 
         /*
-          Create all videos + targets
-          exactly like production.
+          Create videos and targets.
         */
 
         data.posters.forEach(
           (poster) => {
 
+            /*
+              ================================================
+              ORIGINAL VIDEO ELEMENT
+              ================================================
+            */
+
             const videoId =
               "video_" + poster.id;
 
-
-            /*
-              ORIGINAL VIDEO
-            */
 
             const video =
               document.createElement(
@@ -418,6 +294,14 @@
               "auto";
 
 
+            /*
+              DO NOT MUTE
+            */
+
+            video.muted =
+              false;
+
+
             videoAssets.appendChild(
               video
             );
@@ -427,7 +311,9 @@
 
 
             /*
-              ORIGINAL TARGET
+              ================================================
+              TARGET
+              ================================================
             */
 
             const target =
@@ -444,7 +330,9 @@
 
 
             /*
+              ================================================
               ORIGINAL AR VIDEO PLANE
+              ================================================
             */
 
             const videoPlane =
@@ -483,6 +371,12 @@
             );
 
 
+            videoPlane.setAttribute(
+              "visible",
+              "true"
+            );
+
+
             target.appendChild(
               videoPlane
             );
@@ -504,9 +398,9 @@
               async () => {
 
                 /*
-                  Don't trigger another
-                  cinematic reveal while
-                  one is already active.
+                  If a cinematic experience
+                  is already active, ignore
+                  additional target events.
                 */
 
                 if (
@@ -518,22 +412,33 @@
                 }
 
 
+                activeVideo =
+                  video;
+
+
+                activeVideoPlane =
+                  videoPlane;
+
+
                 stopOtherVideos(
                   video
                 );
 
 
+                testStatus.textContent =
+                  "Poster detected...";
+
+
                 try {
+
+                  /*
+                    ORIGINAL PRODUCTION
+                    PLAYBACK METHOD
+                  */
 
                   video.currentTime =
                     0;
 
-
-                  /*
-                    IMPORTANT:
-                    FIRST PLAY THE ORIGINAL
-                    PRODUCTION VIDEO.
-                  */
 
                   await video.play();
 
@@ -543,20 +448,28 @@
 
 
                   /*
-                    THEN start the cinematic
-                    test using the same source.
+                    Give browser a moment
+                    to render the playing video.
                   */
 
-                  await startCinematicReveal(
+                  await nextFrames(2);
+
+
+                  /*
+                    Start cinematic animation.
+                  */
+
+                  await startCinematicZoom(
+                    target,
+                    videoPlane,
                     video
                   );
 
 
                 } catch (error) {
 
-                  console.log(
-                    "Video play blocked:",
-                    poster.id,
+                  console.error(
+                    "Video play error:",
                     error
                   );
 
@@ -582,10 +495,8 @@
 
                 /*
                   IMPORTANT:
-                  Once cinematic mode starts,
-                  do NOT pause the original
-                  video because the poster
-                  disappeared.
+                  After cinematic mode begins,
+                  DO NOT pause the video.
                 */
 
                 if (
@@ -685,151 +596,45 @@
 
     /*
       =========================================================
-      WAIT UNTIL VIDEO HAS DATA
+      NEXT FRAMES
       =========================================================
     */
 
-    function waitForVideoData(
-      video
+    function nextFrames(
+      count
     ) {
 
       return new Promise(
         (resolve) => {
 
-          if (
-            video.readyState >= 2
-          ) {
-
-            resolve();
-
-            return;
-
-          }
+          let remaining =
+            count;
 
 
-          let finished =
-            false;
+          function frame() {
 
-
-          function finish() {
+            remaining--;
 
             if (
-              finished
+              remaining <= 0
             ) {
+
+              resolve();
 
               return;
 
             }
 
-
-            finished =
-              true;
-
-
-            video.removeEventListener(
-              "loadeddata",
-              finish
-            );
-
-
-            video.removeEventListener(
-              "canplay",
-              finish
-            );
-
-
-            resolve();
-
-          }
-
-
-          video.addEventListener(
-            "loadeddata",
-            finish
-          );
-
-
-          video.addEventListener(
-            "canplay",
-            finish
-          );
-
-
-          setTimeout(
-            finish,
-            3000
-          );
-
-        }
-      );
-
-    }
-
-
-    /*
-      =========================================================
-      WAIT FOR REAL VIDEO FRAME
-      =========================================================
-    */
-
-    function waitForVideoFrame(
-      video
-    ) {
-
-      return new Promise(
-        (resolve) => {
-
-          let finished =
-            false;
-
-
-          function finish() {
-
-            if (
-              finished
-            ) {
-
-              return;
-
-            }
-
-
-            finished =
-              true;
-
-
-            resolve();
-
-          }
-
-
-          if (
-            "requestVideoFrameCallback"
-            in video
-          ) {
-
-            video.requestVideoFrameCallback(
-              () => finish()
-            );
-
-          } else {
 
             requestAnimationFrame(
-              () => {
-
-                requestAnimationFrame(
-                  () => finish()
-                );
-
-              }
+              frame
             );
 
           }
 
 
-          setTimeout(
-            finish,
-            1500
+          requestAnimationFrame(
+            frame
           );
 
         }
@@ -840,12 +645,83 @@
 
     /*
       =========================================================
-      CINEMATIC REVEAL
+      VIDEO ASPECT RATIO
       =========================================================
     */
 
-    async function startCinematicReveal(
-      sourceVideo
+    function updateVideoAspect(
+      videoPlane,
+      video
+    ) {
+
+      if (
+        !video.videoWidth ||
+        !video.videoHeight
+      ) {
+
+        return;
+
+      }
+
+
+      const ratio =
+        video.videoWidth /
+        video.videoHeight;
+
+
+      /*
+        Keep the actual video ratio.
+
+        Portrait:
+          width < height
+
+        Landscape:
+          width > height
+      */
+
+      if (
+        ratio >= 1
+      ) {
+
+        videoPlane.setAttribute(
+          "width",
+          ratio
+        );
+
+
+        videoPlane.setAttribute(
+          "height",
+          1
+        );
+
+      } else {
+
+        videoPlane.setAttribute(
+          "width",
+          1
+        );
+
+
+        videoPlane.setAttribute(
+          "height",
+          1 / ratio
+        );
+
+      }
+
+    }
+
+
+    /*
+      =========================================================
+      CINEMATIC ZOOM
+      =========================================================
+    */
+
+    async function startCinematicZoom(
+      target,
+      videoPlane,
+      video
     ) {
 
       if (
@@ -862,190 +738,135 @@
 
 
       testStatus.textContent =
-        "Preparing cinematic reveal...";
+        "Cinematic reveal...";
 
 
       /*
-        Use the EXACT same video source.
+        Get actual video dimensions.
       */
 
-      const source =
-        sourceVideo.currentSrc ||
-        sourceVideo.src;
-
-
-      /*
-        Reset cinematic video.
-      */
-
-      cinematicVideo.pause();
-
-
-      cinematicVideo.removeAttribute(
-        "src"
-      );
-
-
-      cinematicVideo.load();
-
-
-      cinematicVideo.src =
-        source;
-
-
-      cinematicVideo.loop =
-        true;
-
-
-      cinematicVideo.playsInline =
-        true;
-
-
-      cinematicVideo.setAttribute(
-        "playsinline",
-        ""
-      );
-
-
-      cinematicVideo.setAttribute(
-        "webkit-playsinline",
-        ""
+      updateVideoAspect(
+        videoPlane,
+        video
       );
 
 
       /*
-        Start from the same beginning.
+        IMPORTANT:
+        The video is already playing.
+
+        We now detach the SAME
+        <a-video> from the target.
+
+        No second video is created.
       */
 
-      cinematicVideo.currentTime =
-        0;
-
-
-      /*
-        Make layer visible,
-        but video itself remains
-        transparent/small.
-      */
-
-      cinematicLayer.style.display =
-        "flex";
-
-
-      cinematicLayer.classList.remove(
-        "playing"
+      target.removeChild(
+        videoPlane
       );
 
 
-      cinematicLayer.classList.remove(
-        "zooming"
-      );
-
-
-      cinematicVideo.style.opacity =
-        "0";
-
-
-      /*
-        Force layout.
-      */
-
-      void cinematicVideo.offsetWidth;
-
-
-      /*
-        Wait for video data.
-      */
-
-      await waitForVideoData(
-        cinematicVideo
+      scene.appendChild(
+        videoPlane
       );
 
 
       /*
-        Start the cinematic video.
+        Put video directly in front
+        of the camera.
       */
 
-      try {
-
-        await cinematicVideo.play();
-
-      } catch (error) {
-
-        console.warn(
-          "Cinematic video play failed:",
-          error
-        );
-
-        /*
-          If the second video cannot
-          start, keep the original
-          AR video playing instead.
-        */
-
-        cinematicActive =
-          false;
-
-        cinematicLayer.style.display =
-          "none";
-
-        testStatus.textContent =
-          "Original video playing";
-
-        return;
-
-      }
+      videoPlane.setAttribute(
+        "position",
+        "0 0 -1.25"
+      );
 
 
-      /*
-        Wait for actual decoded frame.
-      */
+      videoPlane.setAttribute(
+        "rotation",
+        "0 0 0"
+      );
 
-      await waitForVideoFrame(
-        cinematicVideo
+
+      videoPlane.setAttribute(
+        "visible",
+        "true"
       );
 
 
       /*
-        Show first frame.
+        Start small.
       */
 
-      cinematicLayer.classList.add(
-        "playing"
+      videoPlane.setAttribute(
+        "scale",
+        "0.16 0.16 0.16"
       );
 
 
       /*
-        Give browser time to render
-        that playing frame.
+        Make sure the video is
+        visible.
       */
 
-      await new Promise(
-        resolve =>
-          requestAnimationFrame(
-            () =>
-              requestAnimationFrame(
-                resolve
-              )
-          )
+      videoPlane.setAttribute(
+        "material",
+        "shader: flat"
       );
 
+
+      /*
+        Force browser render.
+      */
+
+      await nextFrames(2);
+
+
+      /*
+        ================================================
+        CINEMATIC ZOOM
+        ================================================
+      */
 
       testStatus.textContent =
-        "Cinematic zoom...";
+        "Slow cinematic zoom...";
 
 
       /*
-        START SLOW ZOOM
+        A-Frame animation.
+
+        4.5 seconds:
+        small → large
+
+        The SAME video continues playing
+        during the entire animation.
       */
 
-      cinematicLayer.classList.add(
-        "zooming"
+      videoPlane.setAttribute(
+        "animation__zoom",
+        [
+          "property: scale;",
+          "from: 0.16 0.16 0.16;",
+          "to: 3.8 3.8 3.8;",
+          "dur: 4500;",
+          "easing: easeOutCubic;",
+          "startEvents: cinematicZoom"
+        ].join(" ")
       );
 
 
       /*
-        After 4.2 seconds the video
-        should have reached full screen.
+        Trigger animation.
+      */
+
+      videoPlane.emit(
+        "cinematicZoom"
+      );
+
+
+      /*
+        After the cinematic animation
+        finishes, keep video playing.
       */
 
       setTimeout(
@@ -1055,7 +876,7 @@
             "Full screen — video playing";
 
         },
-        4300
+        4600
       );
 
     }
