@@ -2,292 +2,223 @@
 <html>
 <head>
 
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <style>
 
-<style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+    }
 
-* {
-  box-sizing: border-box;
-}
 
-html,
-body {
-  margin: 0;
-  padding: 0;
+    /* ================================
+       START BUTTON
+    ================================= */
 
-  width: 100%;
-  height: 100%;
+    #startButton {
 
-  overflow: hidden;
+      position: fixed;
 
-  background: #000;
-}
+      z-index: 9999;
 
+      top: 50%;
+      left: 50%;
 
-/* =================================
-   START BUTTON
-================================= */
+      transform:
+        translate(-50%, -50%);
 
-#startButton {
+      padding: 18px 38px;
 
-  position: fixed;
+      font-size: 18px;
+      font-weight: 600;
 
-  z-index: 9000;
+      letter-spacing: 2px;
 
-  top: 50%;
-  left: 50%;
+      border: 1px solid #d4af37;
 
-  transform:
-    translate(-50%, -50%);
+      border-radius: 50px;
 
-  padding: 18px 38px;
+      background: #111;
 
-  font-size: 18px;
+      color: #d4af37;
 
-  font-weight: 600;
+      cursor: pointer;
+    }
 
-  letter-spacing: 2px;
 
-  border: 1px solid #d4af37;
+    /* ================================
+       LOADING
+    ================================= */
 
-  border-radius: 50px;
+    #loadingText {
 
-  background: #111;
+      position: fixed;
 
-  color: #d4af37;
+      z-index: 9998;
 
-  cursor: pointer;
-}
+      top: 60%;
+      left: 50%;
 
+      transform:
+        translate(-50%, -50%);
 
-/* =================================
-   LOADING
-================================= */
+      color: #d4af37;
 
-#loadingText {
+      font-size: 14px;
 
-  position: fixed;
+      letter-spacing: 2px;
 
-  z-index: 8999;
+      text-align: center;
+    }
 
-  top: 60%;
-  left: 50%;
 
-  transform:
-    translate(-50%, -50%);
+    /* ================================
+       STATUS
+    ================================= */
 
-  color: #d4af37;
+    #status {
 
-  font-size: 14px;
+      position: fixed;
 
-  letter-spacing: 2px;
+      z-index: 9997;
 
-  text-align: center;
-}
+      bottom: 25px;
+      left: 50%;
 
+      transform:
+        translateX(-50%);
 
-/* =================================
-   STATUS
-================================= */
+      color: #d4af37;
 
-#status {
+      font-size: 12px;
 
-  position: fixed;
+      letter-spacing: 1.5px;
 
-  z-index: 8998;
+      text-align: center;
 
-  bottom: 25px;
-  left: 50%;
+      pointer-events: none;
+    }
 
-  transform:
-    translateX(-50%);
 
-  color: #d4af37;
+    /* ================================
+       VIDEO EXPERIENCE
+    ================================= */
 
-  font-size: 12px;
+    #experience {
 
-  letter-spacing: 1.5px;
+      position: fixed;
 
-  text-align: center;
+      inset: 0;
 
-  pointer-events: none;
-}
+      z-index: 10000;
 
+      display: none;
 
-/* =================================
-   EXPERIENCE OVERLAY
+      background: transparent;
 
-   IMPORTANT:
-   Transparent during zoom.
-================================= */
+      pointer-events: none;
 
-#experience {
+      overflow: hidden;
+    }
 
-  position: fixed;
 
-  inset: 0;
+    /*
+      Only the video itself is visible.
+      Camera remains visible around it
+      during the cinematic phase.
+    */
 
-  z-index: 20000;
+    #experienceVideo {
 
-  display: none;
+      position: fixed;
 
-  background: transparent;
+      left: 50%;
+      top: 50%;
 
-  overflow: hidden;
+      width: 1px;
+      height: 1px;
 
-  pointer-events: none;
-}
+      object-fit: contain;
 
+      transform:
+        translate(-50%, -50%)
+        scale(1);
 
-/* =================================
-   VIDEO
+      background: transparent;
 
-   IMPORTANT:
-   The video element itself is
-   NOT viewport-sized initially.
-================================= */
+      z-index: 10001;
 
-#experienceVideo {
+      pointer-events: none;
 
-  position: fixed;
+      transition:
+        width 4.5s
+        cubic-bezier(0.22, 1, 0.36, 1),
 
-  left: 50%;
-  top: 50%;
+        height 4.5s
+        cubic-bezier(0.22, 1, 0.36, 1);
+    }
 
-  /*
-    JS sets the actual width/height
-    according to video aspect ratio.
-  */
 
-  width: 100px;
-  height: 100px;
+    /* ================================
+       CLOSE BUTTON
+    ================================= */
 
-  object-fit: fill;
+    #closeButton {
 
-  transform:
-    translate(-50%, -50%)
-    scale(0.18);
+      position: fixed;
 
-  transform-origin: center center;
+      z-index: 10010;
 
-  background: transparent;
+      top: 14px;
+      right: 14px;
 
-  opacity: 1;
+      width: 32px;
+      height: 32px;
 
-  z-index: 20001;
+      padding: 0;
 
-  pointer-events: none;
+      border-radius: 50%;
 
-  transition:
-    transform 4.5s
-    cubic-bezier(
-      0.22,
-      1,
-      0.36,
-      1
-    );
-}
+      border: 1px solid
+        rgba(212,175,55,0.9);
 
+      background:
+        rgba(0,0,0,0.75);
 
-/* =================================
-   ZOOM
-================================= */
+      color: #d4af37;
 
-#experience.zoomed
-#experienceVideo {
+      font-size: 18px;
 
-  transform:
-    translate(-50%, -50%)
-    scale(1);
-}
+      font-weight: 300;
 
+      line-height: 29px;
 
-/* =================================
-   CLOSE BUTTON
+      text-align: center;
 
-   Highest layer.
-================================= */
+      display: none;
 
-#closeButton {
+      pointer-events: auto;
 
-  position: fixed;
+      touch-action: manipulation;
 
-  z-index: 99999;
+      -webkit-tap-highlight-color:
+        transparent;
 
-  top: 14px;
-  right: 14px;
+      cursor: pointer;
+    }
 
-  width: 32px;
-  height: 32px;
 
-  min-width: 32px;
-  min-height: 32px;
+    #experience.showClose #closeButton {
 
-  padding: 0;
+      display: block;
+    }
 
-  border-radius: 50%;
-
-  border: 1px solid
-    rgba(212,175,55,0.9);
-
-  background:
-    rgba(0,0,0,0.75);
-
-  color: #d4af37;
-
-  font-size: 18px;
-
-  font-weight: 300;
-
-  line-height: 29px;
-
-  text-align: center;
-
-  display: none;
-
-  pointer-events: auto;
-
-  touch-action: manipulation;
-
-  cursor: pointer;
-
-  user-select: none;
-
-  -webkit-user-select: none;
-
-  -webkit-tap-highlight-color:
-    transparent;
-}
-
-
-#experience.showClose
-#closeButton {
-
-  display: block;
-}
-
-
-/* =================================
-   AR SCENE
-
-   Keep camera visible.
-================================= */
-
-a-scene {
-
-  position: fixed !important;
-
-  inset: 0 !important;
-
-  z-index: 1 !important;
-}
-
-</style>
+  </style>
 
 </head>
 
@@ -315,14 +246,14 @@ a-scene {
 
 
 <!-- =================================
-     EXPERIENCE
+     VIDEO EXPERIENCE
 ================================= -->
 
 <div id="experience">
 
   <button
     id="closeButton"
-    aria-label="Close">
+    type="button">
 
     ×
 
@@ -332,44 +263,21 @@ a-scene {
 
 
 <!-- =================================
-     AR SCENE
+     PRODUCTION AR CORE
 ================================= -->
 
 <a-scene
-
-  mindar-image="
-    imageTargetSrc: ./targets.mind;
-    autoStart: false;
-  "
-
+  mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;"
   color-space="sRGB"
+  renderer="colorManagement: true"
+  vr-mode-ui="enabled: false"
+  device-orientation-permission-ui="enabled: false">
 
-  renderer="
-    colorManagement: true
-  "
-
-  vr-mode-ui="
-    enabled: false
-  "
-
-  device-orientation-permission-ui="
-    enabled: false
-  ">
-
-
-  <a-assets
-    id="videoAssets">
-  </a-assets>
-
+  <a-assets id="videoAssets"></a-assets>
 
   <a-camera
-
     position="0 0 0"
-
-    look-controls="
-      enabled: false
-    ">
-
+    look-controls="enabled: false">
   </a-camera>
 
 </a-scene>
@@ -387,36 +295,30 @@ const startButton =
     "#startButton"
   );
 
-
 const loadingText =
   document.querySelector(
     "#loadingText"
   );
-
 
 const status =
   document.querySelector(
     "#status"
   );
 
-
 const scene =
   document.querySelector(
     "a-scene"
   );
-
 
 const videoAssets =
   document.querySelector(
     "#videoAssets"
   );
 
-
 const experience =
   document.querySelector(
     "#experience"
   );
-
 
 const closeButton =
   document.querySelector(
@@ -440,10 +342,10 @@ let currentPlane = null;
 
 
 /* =================================
-   CALCULATE VIDEO SIZE
+   VIDEO SIZE
 ================================= */
 
-function setVideoSize(video) {
+function fitVideoToScreen(video) {
 
   const vw =
     window.innerWidth;
@@ -459,40 +361,19 @@ function setVideoSize(video) {
     video.videoHeight;
 
 
-  /*
-    If metadata is not ready,
-    use a safe 16:9 fallback.
-  */
-
   if (
     !videoWidth ||
     !videoHeight
   ) {
 
-    const ratio =
-      16 / 9;
+    video.style.width =
+      vw + "px";
 
-    if (
-      vw / vh > ratio
-    ) {
-
-      video.style.width =
-        (vh * ratio) + "px";
-
-      video.style.height =
-        vh + "px";
-
-    } else {
-
-      video.style.width =
-        vw + "px";
-
-      video.style.height =
-        (vw / ratio) + "px";
-
-    }
+    video.style.height =
+      vh + "px";
 
     return;
+
   }
 
 
@@ -501,24 +382,9 @@ function setVideoSize(video) {
     videoHeight;
 
 
-  /*
-    CONTAIN calculation.
-
-    The actual element itself gets
-    the correct aspect ratio.
-
-    Therefore no black viewport-sized
-    video box covers the camera.
-  */
-
   if (
     vw / vh > ratio
   ) {
-
-    /*
-      Viewport is wider.
-      Fit by height.
-    */
 
     video.style.height =
       vh + "px";
@@ -527,11 +393,6 @@ function setVideoSize(video) {
       (vh * ratio) + "px";
 
   } else {
-
-    /*
-      Viewport is taller.
-      Fit by width.
-    */
 
     video.style.width =
       vw + "px";
@@ -556,6 +417,10 @@ async function loadContent() {
       "block";
 
 
+    loadingText.textContent =
+      "LOADING AR EXPERIENCE...";
+
+
     const response =
       await fetch(
         "./content.json"
@@ -565,7 +430,7 @@ async function loadContent() {
     if (!response.ok) {
 
       throw new Error(
-        "content.json failed"
+        "Could not load content.json"
       );
 
     }
@@ -577,7 +442,7 @@ async function loadContent() {
 
     if (
       !data.posters ||
-      !data.posters.length
+      data.posters.length === 0
     ) {
 
       throw new Error(
@@ -587,8 +452,16 @@ async function loadContent() {
     }
 
 
+    /* ================================
+       CREATE CONTENT
+    ================================= */
+
     data.posters.forEach(
       poster => {
+
+
+        const videoId =
+          "video_" + poster.id;
 
 
         /* ================================
@@ -601,26 +474,16 @@ async function loadContent() {
           );
 
 
-        const videoId =
-          "video_" +
-          poster.id;
-
-
         video.id =
           videoId;
 
 
         video.src =
-          "./" +
-          poster.video;
+          "./" + poster.video;
 
 
         video.loop =
           true;
-
-
-        video.preload =
-          "auto";
 
 
         video.crossOrigin =
@@ -635,6 +498,14 @@ async function loadContent() {
           "webkit-playsinline",
           ""
         );
+
+
+        /*
+          Keep browser ready for playback.
+        */
+
+        video.preload =
+          "auto";
 
 
         videoAssets.appendChild(
@@ -666,7 +537,7 @@ async function loadContent() {
 
 
         /* ================================
-           AR VIDEO
+           AR VIDEO PLANE
         ================================= */
 
         const videoPlane =
@@ -725,6 +596,11 @@ async function loadContent() {
           async () => {
 
 
+            /*
+              Ignore new targets while
+              fullscreen experience runs.
+            */
+
             if (
               experienceActive
             ) {
@@ -732,6 +608,12 @@ async function loadContent() {
               return;
 
             }
+
+
+            console.log(
+              "TARGET FOUND:",
+              poster.id
+            );
 
 
             stopOtherVideos(
@@ -742,7 +624,6 @@ async function loadContent() {
             currentVideo =
               video;
 
-
             currentPlane =
               videoPlane;
 
@@ -750,9 +631,13 @@ async function loadContent() {
             try {
 
 
+              /*
+                Start the SAME video
+                immediately.
+              */
+
               video.currentTime =
                 0;
-
 
               video.muted =
                 false;
@@ -762,31 +647,8 @@ async function loadContent() {
 
 
               /*
-                Wait for actual video
-                dimensions before
-                showing fullscreen element.
+                Start cinematic experience.
               */
-
-              if (
-                video.readyState < 1
-              ) {
-
-                await new Promise(
-                  resolve => {
-
-                    video.addEventListener(
-                      "loadedmetadata",
-                      resolve,
-                      {
-                        once: true
-                      }
-                    );
-
-                  }
-                );
-
-              }
-
 
               startExperience(
                 video,
@@ -797,7 +659,7 @@ async function loadContent() {
             } catch (error) {
 
               console.error(
-                "Video error:",
+                "Video play error:",
                 error
               );
 
@@ -819,7 +681,8 @@ async function loadContent() {
 
             /*
               Once experience starts,
-              tracking cannot stop it.
+              poster tracking has no
+              control over the video.
             */
 
             if (
@@ -859,6 +722,7 @@ async function loadContent() {
   } catch (error) {
 
     console.error(
+      "Content error:",
       error
     );
 
@@ -880,23 +744,20 @@ async function loadContent() {
 ================================= */
 
 function stopOtherVideos(
-  current
+  currentVideo
 ) {
 
   videos.forEach(
     video => {
 
       if (
-        video !== current
+        video !== currentVideo
       ) {
 
         video.pause();
 
         video.currentTime =
           0;
-
-        video.muted =
-          false;
 
       }
 
@@ -910,9 +771,9 @@ function stopOtherVideos(
    START EXPERIENCE
 ================================= */
 
-function startExperience(
+async function startExperience(
   video,
-  plane
+  videoPlane
 ) {
 
 
@@ -925,44 +786,71 @@ function startExperience(
   }
 
 
+  /*
+    LOCK IMMEDIATELY.
+
+    Poster movement/loss cannot
+    cancel this experience.
+  */
+
   experienceActive =
     true;
 
 
   /*
-    Hide AR plane.
+    Hide the AR plane.
   */
 
-  plane.setAttribute(
+  videoPlane.setAttribute(
     "visible",
     "false"
   );
 
 
   /*
-    Put the SAME video directly
-    on top of the camera.
+    Wait for actual dimensions.
+  */
+
+  if (
+    video.readyState < 1
+  ) {
+
+    await new Promise(
+      resolve => {
+
+        video.addEventListener(
+          "loadedmetadata",
+          resolve,
+          {
+            once: true
+          }
+        );
+
+      }
+    );
+
+  }
+
+
+  /*
+    Move SAME video element
+    out of A-Frame assets.
 
     No second video.
   */
 
-  document.body.appendChild(
+  experience.appendChild(
     video
   );
 
 
   /*
-    Set actual aspect-ratio size.
+    Make it visible.
   */
 
-  setVideoSize(
-    video
-  );
+  video.style.display =
+    "block";
 
-
-  /*
-    Style video.
-  */
 
   video.style.position =
     "fixed";
@@ -976,32 +864,62 @@ function startExperience(
     "50%";
 
 
-  video.style.transform =
-    "translate(-50%, -50%) scale(0.18)";
-
-
-  video.style.objectFit =
-    "fill";
-
-
-  video.style.background =
-    "transparent";
-
-
   video.style.zIndex =
-    "20001";
+    "10001";
 
 
   video.style.pointerEvents =
     "none";
 
 
-  video.style.display =
-    "block";
+  video.style.objectFit =
+    "contain";
+
+
+  video.style.background =
+    "transparent";
 
 
   /*
-    Show transparent experience.
+    Calculate actual video dimensions.
+  */
+
+  fitVideoToScreen(
+    video
+  );
+
+
+  /*
+    Start from small.
+  */
+
+  const finalWidth =
+    video.style.width;
+
+  const finalHeight =
+    video.style.height;
+
+
+  video.style.width =
+    "20px";
+
+  video.style.height =
+    "20px";
+
+
+  video.style.transform =
+    "translate(-50%, -50%)";
+
+
+  /*
+    Force browser layout.
+  */
+
+  void video.offsetWidth;
+
+
+  /*
+    Show experience layer.
   */
 
   experience.style.display =
@@ -1014,14 +932,7 @@ function startExperience(
 
 
   /*
-    Force initial render.
-  */
-
-  void video.offsetWidth;
-
-
-  /*
-    Start smooth zoom.
+    Cinematic zoom.
   */
 
   requestAnimationFrame(
@@ -1030,8 +941,11 @@ function startExperience(
       requestAnimationFrame(
         () => {
 
-          video.style.transform =
-            "translate(-50%, -50%) scale(1)";
+          video.style.width =
+            finalWidth;
+
+          video.style.height =
+            finalHeight;
 
         }
       );
@@ -1041,36 +955,38 @@ function startExperience(
 
 
   /*
-    STOP MINDAR.
+    IMPORTANT:
 
-    From this point the poster
-    is irrelevant.
+    Stop MindAR AFTER the video
+    has already started.
+
+    The video itself continues.
   */
 
-  const arSystem =
-    scene.systems[
-      "mindar-image-system"
-    ];
+  try {
+
+    const arSystem =
+      scene.systems[
+        "mindar-image-system"
+      ];
 
 
-  arSystem.stop()
-    .then(() => {
+    await arSystem.stop();
 
-      console.log(
-        "MindAR stopped."
-      );
 
-    })
-    .catch(
-      error => {
-
-        console.log(
-          "MindAR stop:",
-          error
-        );
-
-      }
+    console.log(
+      "MindAR stopped after hand-off."
     );
+
+
+  } catch (error) {
+
+    console.log(
+      "MindAR stop:",
+      error
+    );
+
+  }
 
 
   status.textContent =
@@ -1080,10 +996,10 @@ function startExperience(
 
 
 /* =================================
-   CLOSE
+   CLOSE EXPERIENCE
 ================================= */
 
-function closeExperience(
+async function closeExperience(
   event
 ) {
 
@@ -1097,13 +1013,8 @@ function closeExperience(
   }
 
 
-  console.log(
-    "CLOSE EXPERIENCE"
-  );
-
-
   /*
-    Stop video.
+    Stop current video.
   */
 
   if (
@@ -1117,7 +1028,8 @@ function closeExperience(
 
 
     /*
-      Restore video to assets.
+      Return SAME video element
+      to A-Frame assets.
     */
 
     videoAssets.appendChild(
@@ -1125,47 +1037,38 @@ function closeExperience(
     );
 
 
-    currentVideo.style.position =
+    /*
+      Clear fullscreen styles.
+    */
+
+    currentVideo.style.display =
       "";
 
+    currentVideo.style.position =
+      "";
 
     currentVideo.style.left =
       "";
 
-
     currentVideo.style.top =
       "";
-
 
     currentVideo.style.width =
       "";
 
-
     currentVideo.style.height =
       "";
-
-
-    currentVideo.style.objectFit =
-      "";
-
-
-    currentVideo.style.background =
-      "";
-
 
     currentVideo.style.zIndex =
       "";
 
-
     currentVideo.style.pointerEvents =
       "";
 
-
-    currentVideo.style.transform =
+    currentVideo.style.objectFit =
       "";
 
-
-    currentVideo.style.display =
+    currentVideo.style.background =
       "";
 
   }
@@ -1196,11 +1099,6 @@ function closeExperience(
   );
 
 
-  experience.classList.remove(
-    "zoomed"
-  );
-
-
   experience.style.display =
     "none";
 
@@ -1212,10 +1110,8 @@ function closeExperience(
   experienceActive =
     false;
 
-
   currentVideo =
     null;
-
 
   currentPlane =
     null;
@@ -1237,29 +1133,23 @@ function closeExperience(
       ];
 
 
-    arSystem.start()
-      .then(() => {
+    await arSystem.start();
 
-        status.textContent =
-          "POINT CAMERA AT YOUR POSTER";
 
-      })
-      .catch(
-        error => {
+    status.textContent =
+      "POINT CAMERA AT YOUR POSTER";
 
-          console.error(
-            "AR restart:",
-            error
-          );
-
-        }
-      );
 
   } catch (error) {
 
     console.error(
+      "AR restart error:",
       error
     );
+
+
+    status.textContent =
+      "POINT CAMERA AT YOUR POSTER";
 
   }
 
@@ -1275,11 +1165,6 @@ closeButton.addEventListener(
   closeExperience
 );
 
-
-/*
-  Extra touch protection for
-  Android browsers.
-*/
 
 closeButton.addEventListener(
   "touchend",
@@ -1314,7 +1199,7 @@ window.addEventListener(
       currentVideo
     ) {
 
-      setVideoSize(
+      fitVideoToScreen(
         currentVideo
       );
 
