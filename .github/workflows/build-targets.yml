@@ -50,40 +50,48 @@ jobs:
         working-directory: mindar
         run: npm install
 
-      - name: Create compiler script
+      - name: Create incremental compiler
         working-directory: mindar
         run: |
           cat > build-targets.js <<'EOF'
+
           import { OfflineCompiler } from './src/image-target/offline-compiler.js';
           import { loadImage } from 'canvas';
-          import { writeFile, readFile } from 'fs/promises';
+          import { readFile, writeFile } from 'fs/promises';
+          import * as msgpack from '@msgpack/msgpack';
           import fs from 'fs';
           import path from 'path';
 
-          const repoRoot = process.env.GITHUB_WORKSPACE;
-          const targetDir = path.join(repoRoot, 'targets');
-          const outputFile = path.join(repoRoot, 'targets.mind');
-          const contentFile = path.join(repoRoot, 'content.json');
+          const repoRoot =
+            process.env.GITHUB_WORKSPACE;
+
+          const targetDir =
+            path.join(repoRoot, 'targets');
+
+          const mindFile =
+            path.join(repoRoot, 'targets.mind');
+
+          const contentFile =
+            path.join(repoRoot, 'content.json');
+
 
           function findVideo(posterFile) {
 
-            const baseName = path
-              .parse(posterFile)
-              .name;
+            const baseName =
+              path.parse(posterFile).name;
 
-            const numberMatch = baseName.match(/(\d+)$/);
+            const numberMatch =
+              baseName.match(/(\d+)$/);
 
             if (!numberMatch) {
               return null;
             }
 
-            const number = numberMatch[1];
-
-            const paddedNumber =
-              number.padStart(3, '0');
+            const number =
+              numberMatch[1];
 
             const candidates = [
-              `video${paddedNumber}.mp4`,
+              `video${number.padStart(3, '0')}.mp4`,
               `video${number}.mp4`
             ];
 
@@ -101,80 +109,50 @@ jobs:
             return null;
           }
 
+
           async function run() {
 
-            /* GET ALL TARGET IMAGES */
+            console.log('Starting incremental AR build...');
 
-            const files = fs.readdirSync(targetDir)
-              .filter(file =>
-                /\.(png|jpg|jpeg|webp)$/i.test(file)
-              )
-              .sort();
 
-            if (files.length === 0) {
+            /*
+             * LOAD EXISTING DATABASE
+             */
+
+            if (!fs.existsSync(mindFile)) {
               throw new Error(
-                'No target images found in targets/'
+                'targets.mind not found. Production database is missing.'
               );
             }
 
-            console.log(
-              `Found ${files.length} target images.`
-            );
+            const existingBuffer =
+              await readFile(mindFile);
 
-
-            /* LOAD TARGET IMAGES */
-
-            const images = [];
-
-            for (const file of files) {
-
-              const imagePath =
-                path.join(targetDir, file);
-
-              console.log(
-                `Loading: ${file}`
+            const existingData =
+              msgpack.decode(
+                new Uint8Array(existingBuffer)
               );
 
-              images.push(
-                await loadImage(imagePath)
+            if (
+              existingData.v !== 2 ||
+              !Array.isArray(existingData.dataList)
+            ) {
+              throw new Error(
+                'Invalid MindAR database format.'
               );
             }
 
-
-            /* BUILD MINDAR DATABASE */
-
-            const compiler =
-              new OfflineCompiler();
+            const existingCount =
+              existingData.dataList.length;
 
             console.log(
-              'Starting MindAR compilation...'
-            );
-
-            await compiler.compileImageTargets(
-              images,
-              progress => {
-
-                console.log(
-                  `Progress: ${progress.toFixed(2)}%`
-                );
-
-              }
-            );
-
-            const buffer =
-              compiler.exportData();
-
-            await writeFile(
-              outputFile,
-              buffer
-            );
-
-            console.log(
-              `Created: ${outputFile}`
+              `Existing targets: ${existingCount}`
             );
 
 
-            /* LOAD EXISTING CONTENT */
+            /*
+             * LOAD CONTENT DATABASE
+             */
 
             let content = {
               version: 2,
@@ -183,22 +161,13 @@ jobs:
 
             if (fs.existsSync(contentFile)) {
 
-              try {
-
-                content = JSON.parse(
+              content =
+                JSON.parse(
                   await readFile(
                     contentFile,
                     'utf8'
                   )
                 );
-
-              } catch (error) {
-
-                console.log(
-                  'Could not read existing content.json.'
-                );
-
-              }
 
             }
 
@@ -207,60 +176,170 @@ jobs:
             }
 
 
-            /* UPDATE EXISTING POSTERS */
+            /*
+             * GET ALL TARGET FILES
+             */
 
-            for (const poster of content.posters) {
+            const allFiles =
+              fs.readdirSync(targetDir)
+                .filter(file =>
+                  /\.(png|jpg|jpeg|webp)$/i.test(file)
+                )
+                .sort();
 
-              const index =
-                files.indexOf(
-                  poster.targetFile
+
+            /*
+             * FIND TARGETS NOT YET IN CONTENT DATABASE
+             */
+
+            const newFiles =
+              allFiles.filter(file =>
+                !content.posters.some(
+                  poster =>
+                    poster.targetFile === file
+                )
+              );
+
+
+            /*
+             * ONLY KEEP TARGETS THAT HAVE A VIDEO
+             */
+
+            const readyFiles =
+              newFiles.filter(file => {
+
+                const video =
+                  findVideo(file);
+
+                if (!video) {
+
+                  console.log(
+                    `Waiting for matching video: ${file}`
+                  );
+
+                  return false;
+                }
+
+                return true;
+
+              });
+
+
+            if (readyFiles.length === 0) {
+
+              console.log(
+                'No new poster with matching video found.'
+              );
+
+              return;
+            }
+
+
+            console.log(
+              `New targets to compile: ${readyFiles.length}`
+            );
+
+
+            /*
+             * LOAD ONLY NEW IMAGES
+             */
+
+            const images = [];
+
+            for (const file of readyFiles) {
+
+              console.log(
+                `Loading NEW target: ${file}`
+              );
+
+              const image =
+                await loadImage(
+                  path.join(targetDir, file)
                 );
 
-              if (index !== -1) {
-
-                poster.targetIndex = index;
-
-                console.log(
-                  `${poster.targetFile} -> index ${index}`
-                );
-
-              }
+              images.push(image);
 
             }
 
 
-            /* ADD NEW POSTERS AUTOMATICALLY */
+            /*
+             * COMPILE ONLY NEW TARGETS
+             */
+
+            const compiler =
+              new OfflineCompiler();
+
+            const start =
+              Date.now();
+
+            console.log(
+              'Compiling NEW targets only...'
+            );
+
+            await compiler.compileImageTargets(
+              images,
+              progress => {
+
+                console.log(
+                  `New target progress: ${progress.toFixed(2)}%`
+                );
+
+              }
+            );
+
+            const newBuffer =
+              compiler.exportData();
+
+            const newData =
+              msgpack.decode(
+                new Uint8Array(newBuffer)
+              );
+
+            const elapsed =
+              (
+                (Date.now() - start) /
+                1000
+              ).toFixed(2);
+
+            console.log(
+              `New target compile time: ${elapsed} seconds`
+            );
+
+
+            /*
+             * MERGE OLD + NEW
+             */
+
+            const combinedDataList = [
+              ...existingData.dataList,
+              ...newData.dataList
+            ];
+
+            const combined =
+              msgpack.encode({
+                v: existingData.v,
+                dataList: combinedDataList
+              });
+
+
+            /*
+             * UPDATE CONTENT DATABASE
+             */
 
             for (
-              let index = 0;
-              index < files.length;
-              index++
+              let i = 0;
+              i < readyFiles.length;
+              i++
             ) {
 
               const posterFile =
-                files[index];
-
-              const existing =
-                content.posters.find(
-                  poster =>
-                    poster.targetFile === posterFile
-                );
-
-              if (existing) {
-                continue;
-              }
+                readyFiles[i];
 
               const video =
                 findVideo(posterFile);
 
-              if (!video) {
-
-                console.log(
-                  `No matching video found for ${posterFile}.`
-                );
-
-                continue;
-              }
+              const targetIndex =
+                existingCount + i;
 
               const posterId =
                 path.parse(posterFile).name;
@@ -271,20 +350,22 @@ jobs:
 
                 targetFile: posterFile,
 
-                targetIndex: index,
+                targetIndex: targetIndex,
 
                 video: video
 
               });
 
               console.log(
-                `NEW: ${posterFile} -> ${video}`
+                `ADDED: ${posterFile} -> ${video} -> index ${targetIndex}`
               );
 
             }
 
 
-            /* SORT CONTENT BY TARGET INDEX */
+            /*
+             * SORT CONTENT BY TARGET INDEX
+             */
 
             content.posters.sort(
               (a, b) =>
@@ -293,7 +374,14 @@ jobs:
             );
 
 
-            /* SAVE CONTENT */
+            /*
+             * WRITE DATABASE
+             */
+
+            await writeFile(
+              mindFile,
+              combined
+            );
 
             await writeFile(
               contentFile,
@@ -304,11 +392,21 @@ jobs:
               ) + '\n'
             );
 
+
+            console.log(
+              `Combined targets: ${combinedDataList.length}`
+            );
+
+            console.log(
+              'targets.mind updated successfully.'
+            );
+
             console.log(
               'content.json updated successfully.'
             );
 
           }
+
 
           run().catch(error => {
 
@@ -317,9 +415,10 @@ jobs:
             process.exit(1);
 
           });
+
           EOF
 
-      - name: Build targets and update content
+      - name: Build incremental targets
         working-directory: mindar
         run: node build-targets.js
 
@@ -331,9 +430,9 @@ jobs:
           git add targets.mind content.json
 
           if git diff --cached --quiet; then
-            echo "No changes to commit"
+            echo "No AR database changes"
           else
-            git commit -m "Auto update AR targets and content"
+            git commit -m "Incrementally update AR targets"
 
             git fetch origin main
             git rebase origin/main
