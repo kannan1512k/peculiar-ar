@@ -8,7 +8,7 @@
     content="width=device-width, initial-scale=1.0, viewport-fit=cover"
   >
 
-  <title>Peculiar AR - Cinematic Video Test</title>
+  <title>Peculiar AR - Cinematic Test</title>
 
   <!-- SAME PRODUCTION LIBRARIES -->
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
@@ -29,7 +29,6 @@
       background: #000;
     }
 
-
     body {
       font-family: Arial, sans-serif;
     }
@@ -40,7 +39,6 @@
        ===================================================== */
 
     #startButton {
-
       position: fixed;
 
       z-index: 9999;
@@ -51,8 +49,7 @@
       transform:
         translate(-50%, -50%);
 
-      padding:
-        18px 35px;
+      padding: 18px 35px;
 
       font-size: 20px;
 
@@ -65,12 +62,10 @@
       background: #fff;
 
       color: #000;
-
     }
 
 
     #loadingText {
-
       position: fixed;
 
       z-index: 9998;
@@ -86,7 +81,6 @@
       font-size: 16px;
 
       display: none;
-
     }
 
 
@@ -95,7 +89,6 @@
        ===================================================== */
 
     #status {
-
       position: fixed;
 
       z-index: 9999;
@@ -120,19 +113,12 @@
       font-size: 12px;
 
       pointer-events: none;
-
     }
 
 
     /* =====================================================
-       FULL SCREEN VIDEO HAND-OFF
-       =====================================================
-
-       IMPORTANT:
-
-       This layer is completely hidden
-       until the poster is detected.
-    */
+       FULL VIDEO LAYER
+       ===================================================== */
 
     #fullVideoLayer {
 
@@ -148,8 +134,13 @@
 
       justify-content: center;
 
-      background:
-        transparent;
+      /*
+        IMPORTANT:
+        No black background during reveal.
+        Camera remains visible behind it.
+      */
+
+      background: transparent;
 
       overflow: hidden;
 
@@ -159,7 +150,14 @@
 
 
     /* =====================================================
-       FULL SCREEN VIDEO
+       VIDEO
+
+       IMPORTANT:
+       The video itself is NOT 100vw x 100vh
+       initially.
+
+       Its actual aspect ratio is calculated
+       by JavaScript.
        ===================================================== */
 
     #fullVideo {
@@ -170,9 +168,13 @@
 
       top: 50%;
 
-      width: 100vw;
+      width: auto;
 
-      height: 100vh;
+      height: auto;
+
+      max-width: none;
+
+      max-height: none;
 
       object-fit: contain;
 
@@ -206,7 +208,7 @@
           1
         ),
 
-        opacity 0.35s ease,
+        opacity 0.3s ease,
 
         border-radius 4s ease;
 
@@ -214,13 +216,11 @@
 
 
     /* =====================================================
-       REVEAL STARTED
+       REVEAL
        ===================================================== */
 
     #fullVideoLayer.revealing {
-
       display: flex;
-
     }
 
 
@@ -228,10 +228,6 @@
     #fullVideo {
 
       opacity: 1;
-
-      transform:
-        translate(-50%, -50%)
-        scale(0.18);
 
     }
 
@@ -354,14 +350,11 @@
 
 
     <a-camera
-
       position="0 0 0"
-
       look-controls="
         enabled:
         false
       "
-
     ></a-camera>
 
   </a-scene>
@@ -417,10 +410,8 @@
 
     let videos = [];
 
-
     let targetsReady =
       false;
-
 
     let experienceActive =
       false;
@@ -475,7 +466,7 @@
 
 
         /* =================================================
-           CREATE ALL POSTERS
+           CREATE POSTERS
            ================================================= */
 
         data.posters.forEach(
@@ -487,7 +478,7 @@
 
 
             /* =============================================
-               ORIGINAL AR VIDEO
+               AR VIDEO
                ============================================= */
 
             const video =
@@ -528,8 +519,7 @@
 
 
             /*
-              IMPORTANT:
-              Sound is NOT muted.
+              SOUND ON
             */
 
             video.muted =
@@ -564,7 +554,7 @@
 
 
             /* =============================================
-               ORIGINAL A-VIDEO
+               AR VIDEO PLANE
                ============================================= */
 
             const videoPlane =
@@ -639,8 +629,7 @@
                 try {
 
                   /*
-                    ORIGINAL WORKING
-                    VIDEO START
+                    ORIGINAL VIDEO STARTS
                   */
 
                   video.currentTime =
@@ -655,18 +644,17 @@
 
 
                   /*
-                    Let the video render
-                    a couple of frames.
+                    Wait for video to
+                    actually render.
                   */
 
-                  await waitFrames(
+                  await waitForFrames(
                     2
                   );
 
 
                   /*
-                    NOW HAND OFF TO
-                    FULL SCREEN VIDEO.
+                    START HAND-OFF
                   */
 
                   await startVideoReveal(
@@ -700,9 +688,9 @@
               () => {
 
                 /*
-                  Once hand-off has happened,
-                  the camera no longer controls
-                  the video.
+                  Once full-screen hand-off
+                  begins, camera tracking
+                  must NOT stop the video.
                 */
 
                 if (
@@ -791,7 +779,7 @@
        WAIT FRAMES
        ===================================================== */
 
-    function waitFrames(
+    function waitForFrames(
       count
     ) {
 
@@ -836,7 +824,7 @@
 
 
     /* =====================================================
-       WAIT VIDEO READY
+       VIDEO READY
        ===================================================== */
 
     function waitForVideoReady(
@@ -857,14 +845,14 @@
           }
 
 
-          let done =
+          let finished =
             false;
 
 
           function finish() {
 
             if (
-              done
+              finished
             ) {
 
               return;
@@ -872,7 +860,7 @@
             }
 
 
-            done =
+            finished =
               true;
 
 
@@ -911,7 +899,7 @@
 
 
     /* =====================================================
-       WAIT REAL VIDEO FRAME
+       REAL VIDEO FRAME
        ===================================================== */
 
     function waitForRealFrame(
@@ -981,7 +969,99 @@
 
 
     /* =====================================================
-       VIDEO REVEAL
+       CALCULATE VIDEO SIZE
+       ===================================================== */
+
+    function setVideoSize(
+      video
+    ) {
+
+      if (
+        !video.videoWidth ||
+        !video.videoHeight
+      ) {
+
+        return;
+
+      }
+
+
+      const vw =
+        video.videoWidth;
+
+
+      const vh =
+        video.videoHeight;
+
+
+      const viewportWidth =
+        window.innerWidth;
+
+
+      const viewportHeight =
+        window.innerHeight;
+
+
+      const videoRatio =
+        vw / vh;
+
+
+      const viewportRatio =
+        viewportWidth /
+        viewportHeight;
+
+
+      let width;
+
+      let height;
+
+
+      /*
+        CONTAIN:
+
+        Portrait video:
+        fit to height.
+
+        Landscape video:
+        fit to width.
+      */
+
+      if (
+        videoRatio >
+        viewportRatio
+      ) {
+
+        width =
+          viewportWidth;
+
+        height =
+          width /
+          videoRatio;
+
+      } else {
+
+        height =
+          viewportHeight;
+
+        width =
+          height *
+          videoRatio;
+
+      }
+
+
+      video.style.width =
+        width + "px";
+
+
+      video.style.height =
+        height + "px";
+
+    }
+
+
+    /* =====================================================
+       START VIDEO REVEAL
        ===================================================== */
 
     async function startVideoReveal(
@@ -998,10 +1078,7 @@
 
 
       /*
-        Mark experience active immediately.
-
-        From this point, targetLost
-        cannot stop the experience.
+        Lock the experience.
       */
 
       experienceActive =
@@ -1012,17 +1089,15 @@
         "Preparing cinematic reveal...";
 
 
-      /*
-        Copy SAME video source.
-      */
-
-      const videoSource =
+      const source =
         sourceVideo.currentSrc ||
         sourceVideo.src;
 
 
       /*
-        Prepare full screen video.
+        ================================================
+        PREPARE FULL VIDEO
+        ================================================
       */
 
       fullVideo.pause();
@@ -1037,7 +1112,7 @@
 
 
       fullVideo.src =
-        videoSource;
+        source;
 
 
       fullVideo.loop =
@@ -1046,10 +1121,6 @@
 
       fullVideo.playsInline =
         true;
-
-
-      fullVideo.muted =
-        false;
 
 
       fullVideo.setAttribute(
@@ -1065,15 +1136,39 @@
 
 
       /*
-        Start from beginning.
+        VERY IMPORTANT:
+        Do NOT mute.
       */
+
+      fullVideo.muted =
+        false;
+
 
       fullVideo.currentTime =
         0;
 
 
       /*
-        Show small video.
+        Wait for dimensions.
+      */
+
+      await waitForVideoReady(
+        fullVideo
+      );
+
+
+      /*
+        Set actual video dimensions.
+      */
+
+      setVideoSize(
+        fullVideo
+      );
+
+
+      /*
+        Small video appears over
+        the camera.
       */
 
       fullVideoLayer.style.display =
@@ -1098,17 +1193,9 @@
 
 
       /*
-        Wait for actual video data.
-      */
-
-      await waitForVideoReady(
-        fullVideo
-      );
-
-
-      /*
-        PLAY FULL VIDEO
-        BEFORE ZOOM.
+        ================================================
+        START FULL VIDEO
+        ================================================
       */
 
       try {
@@ -1118,15 +1205,13 @@
       } catch (error) {
 
         console.error(
-          "Full video play error:",
+          "Full video play failed:",
           error
         );
 
 
         /*
-          If browser blocks the
-          second playback, don't
-          destroy the working AR video.
+          Return safely.
         */
 
         experienceActive =
@@ -1138,43 +1223,51 @@
 
 
         status.textContent =
-          "Original AR video playing";
+          "Original video playing";
 
         return;
 
       }
 
 
-      /*
-        Wait until browser actually
-        decoded a frame.
-      */
-
       await waitForRealFrame(
         fullVideo
       );
 
 
-      /*
-        Wait two more frames.
-      */
-
-      await waitFrames(
+      await waitForFrames(
         2
       );
 
 
-      status.textContent =
-        "Cinematic zoom...";
+      /*
+        ================================================
+        SINGLE AUDIO SOURCE
+        ================================================
+
+        Full-screen video is now playing.
+
+        Immediately stop the AR video's
+        audio/video.
+
+        This prevents DOUBLE SOUND.
+      */
+
+      sourceVideo.pause();
+
+      sourceVideo.muted =
+        true;
 
 
       /*
-        =====================================================
-        START SLOW ZOOM
-        =====================================================
-
-        Small video → full screen.
+        ================================================
+        START CINEMATIC ZOOM
+        ================================================
       */
+
+      status.textContent =
+        "Cinematic zoom...";
+
 
       fullVideoLayer.classList.add(
         "fullscreen"
@@ -1182,15 +1275,15 @@
 
 
       /*
-        After 4.5 seconds:
-        video is full screen.
+        After zoom:
+        full video continues independently.
       */
 
       setTimeout(
         () => {
 
           status.textContent =
-            "Full screen video — playing";
+            "Full screen — video playing";
 
         },
         4600
@@ -1203,66 +1296,4 @@
        START AR
        ===================================================== */
 
-    startButton.addEventListener(
-      "click",
-      async () => {
-
-        if (
-          !targetsReady
-        ) {
-
-          return;
-
-        }
-
-
-        startButton.style.display =
-          "none";
-
-
-        const arSystem =
-          scene.systems[
-            "mindar-image-system"
-          ];
-
-
-        try {
-
-          await arSystem.start();
-
-
-          status.textContent =
-            "Point camera at poster";
-
-
-        } catch (error) {
-
-          console.error(
-            "AR start error:",
-            error
-          );
-
-
-          startButton.style.display =
-            "block";
-
-
-          startButton.textContent =
-            "START AR";
-
-        }
-
-      }
-    );
-
-
-    /* =====================================================
-       LOAD
-       ===================================================== */
-
-    loadContent();
-
-  </script>
-
-</body>
-</html>
+    startButton.addEvent
