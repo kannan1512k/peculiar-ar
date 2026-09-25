@@ -23,11 +23,6 @@
       font-family: Arial, Helvetica, sans-serif;
     }
 
-
-    /* =====================================
-       PREMIUM INTRO SCREEN
-       ===================================== */
-
     #introScreen {
       position: fixed;
       inset: 0;
@@ -55,14 +50,15 @@
 
       color: #fff;
       text-align: center;
-    }
 
+      transition:
+        opacity 0.55s ease,
+        transform 0.55s ease;
+    }
 
     #introScreen::before {
       content: "";
-
       position: absolute;
-
       inset: 14px;
 
       border:
@@ -70,20 +66,27 @@
         rgba(255, 196, 60, 0.22);
 
       border-radius: 22px;
-
       pointer-events: none;
     }
 
+    #introScreen.hide {
+      animation:
+        introExit
+        0.55s
+        ease
+        forwards;
+    }
 
-    /* =====================================
-       LOGO
-       ===================================== */
+    @keyframes introExit {
+      to {
+        opacity: 0;
+        transform: scale(1.03);
+        pointer-events: none;
+      }
+    }
 
     #brandLogo {
-
-      width:
-        min(78vw, 360px);
-
+      width: min(78vw, 360px);
       max-height: 210px;
 
       object-fit: contain;
@@ -99,61 +102,27 @@
           0 0 30px
           rgba(255, 180, 20, 0.12)
         );
-
-      animation:
-        logoAppear 1.2s ease forwards;
     }
-
-
-    @keyframes logoAppear {
-
-      from {
-        opacity: 0;
-        transform: scale(0.88);
-      }
-
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
-
-    }
-
-
-    /* =====================================
-       BRAND LABEL
-       ===================================== */
 
     #experienceLabel {
-
       font-size: 11px;
-
       letter-spacing: 4px;
 
       color:
         rgba(255, 215, 120, 0.8);
 
       margin-bottom: 12px;
-
       text-transform: uppercase;
     }
 
-
-    /* =====================================
-       MAIN TITLE
-       ===================================== */
-
     #mainTitle {
-
       margin: 0;
 
       font-size:
         clamp(27px, 8vw, 44px);
 
       line-height: 1.08;
-
       font-weight: 700;
-
       letter-spacing: 1px;
 
       background:
@@ -166,23 +135,14 @@
         );
 
       -webkit-background-clip: text;
-
       background-clip: text;
-
       color: transparent;
     }
 
-
-    /* =====================================
-       TAGLINE
-       ===================================== */
-
     #tagline {
-
       margin-top: 9px;
 
       font-size: 13px;
-
       letter-spacing: 1.5px;
 
       color:
@@ -191,33 +151,20 @@
       text-transform: uppercase;
     }
 
-
-    /* =====================================
-       DESCRIPTION
-       ===================================== */
-
     #description {
-
       max-width: 340px;
 
       margin:
         16px 0 28px;
 
       font-size: 14px;
-
       line-height: 1.65;
 
       color:
         rgba(255, 255, 255, 0.68);
     }
 
-
-    /* =====================================
-       CTA BUTTON
-       ===================================== */
-
     #startButton {
-
       position: relative;
 
       min-width: 225px;
@@ -242,9 +189,7 @@
       color: #080808;
 
       font-size: 15px;
-
       font-weight: 800;
-
       letter-spacing: 2.5px;
 
       cursor: pointer;
@@ -261,62 +206,35 @@
         box-shadow 0.2s ease;
     }
 
-
     #startButton:active {
-
-      transform:
-        scale(0.96);
-
-      box-shadow:
-        0 0 28px
-        rgba(255, 194, 50, 0.4);
+      transform: scale(0.96);
     }
 
-
     #startButton:disabled {
-
       opacity: 0.55;
-
       cursor: default;
     }
 
-
-    /* =====================================
-       CAMERA INSTRUCTION
-       ===================================== */
-
     #scanHint {
-
       margin-top: 22px;
 
       font-size: 12px;
-
       line-height: 1.5;
 
       color:
         rgba(255,255,255,0.48);
     }
 
-
     #scanHint span {
-
-      color:
-        #e8b83d;
+      color: #e8b83d;
     }
 
-
-    /* =====================================
-       LOADING
-       ===================================== */
-
     #loadingText {
-
       position: fixed;
 
       z-index: 100000;
 
       left: 50%;
-
       bottom: 34px;
 
       transform:
@@ -326,19 +244,15 @@
         rgba(255,255,255,0.6);
 
       font-size: 12px;
-
       letter-spacing: 1px;
 
       display: none;
     }
 
-
     .loaderDot {
-
       display: inline-block;
 
       width: 5px;
-
       height: 5px;
 
       margin-left: 4px;
@@ -352,7 +266,6 @@
         infinite
         ease-in-out;
     }
-
 
     @keyframes pulse {
 
@@ -370,42 +283,11 @@
 
 
     /* =====================================
-       INTRO EXIT
-       ===================================== */
-
-    #introScreen.hide {
-
-      animation:
-        introExit
-        0.55s
-        ease
-        forwards;
-    }
-
-
-    @keyframes introExit {
-
-      to {
-
-        opacity: 0;
-
-        transform:
-          scale(1.03);
-
-        pointer-events: none;
-      }
-
-    }
-
-
-    /* =====================================
-       VIDEO EXPERIENCE OVERLAY
+       VIDEO EXPERIENCE
        ===================================== */
 
     #videoExperience {
-
       position: fixed;
-
       inset: 0;
 
       z-index: 90000;
@@ -413,7 +295,6 @@
       display: none;
 
       align-items: center;
-
       justify-content: center;
 
       background:
@@ -430,30 +311,11 @@
         background 0.8s ease;
     }
 
-
-    /*
-      =========================================
-      CINEMATIC VIDEO
-      =========================================
-
-      IMPORTANT:
-
-      The video keeps its final size.
-
-      Only transform: scale()
-      is animated.
-
-      This avoids width/height layout
-      recalculation and makes the zoom
-      much smoother on mobile.
-    */
-
     #experienceVideo {
 
       display: block;
 
       width: 100vw;
-
       height: 100vh;
 
       object-fit: contain;
@@ -500,22 +362,14 @@
         ease;
     }
 
-
-    /*
-      Reveal state
-    */
-
     #videoExperience.reveal {
-
       background:
         rgba(0, 0, 0, 0.94);
 
-      pointer-events:
-        auto;
+      pointer-events: auto;
 
       opacity: 1;
     }
-
 
     #videoExperience.reveal
     #experienceVideo {
@@ -532,13 +386,7 @@
         rgba(255, 194, 50, 0.08);
     }
 
-
-    /* =====================================
-       GOLD REVEAL FRAME
-       ===================================== */
-
     #revealFrame {
-
       position: absolute;
 
       inset: 20px;
@@ -552,35 +400,17 @@
       opacity: 0;
 
       pointer-events: none;
-
-      transition:
-        opacity 0.45s ease;
     }
-
-
-    #videoExperience.reveal
-    #revealFrame {
-
-      opacity: 0;
-    }
-
-
-    /* =====================================
-       VIDEO CLOSE BUTTON
-       ===================================== */
 
     #closeVideo {
-
       position: fixed;
 
       top: 22px;
-
       right: 22px;
 
       z-index: 90010;
 
       width: 42px;
-
       height: 42px;
 
       border:
@@ -599,21 +429,15 @@
       display: none;
 
       align-items: center;
-
       justify-content: center;
 
       cursor: pointer;
-
-      pointer-events: auto;
     }
-
 
     #videoExperience.reveal
     #closeVideo {
-
       display: flex;
     }
-
 
   </style>
 </head>
@@ -622,12 +446,7 @@
 <body>
 
 
-  <!-- =====================================
-       PREMIUM OPENING SCREEN
-       ===================================== -->
-
   <div id="introScreen">
-
 
     <img
       id="brandLogo"
@@ -635,21 +454,17 @@
       alt="Peculiar Print Hub"
     >
 
-
     <div id="experienceLabel">
       PECULIAR PRINT HUB
     </div>
-
 
     <h1 id="mainTitle">
       BRING IT TO LIFE
     </h1>
 
-
     <div id="tagline">
       ONE PRINT. A WHOLE NEW EXPERIENCE.
     </div>
-
 
     <p id="description">
       Your printed poster has more to reveal.
@@ -657,14 +472,12 @@
       your print come alive.
     </p>
 
-
     <button
       id="startButton"
       disabled
     >
-      UNVEIL ✦
+      LOADING...
     </button>
-
 
     <div id="scanHint">
 
@@ -679,10 +492,6 @@
   </div>
 
 
-  <!-- =====================================
-       LOADING
-       ===================================== -->
-
   <div id="loadingText">
 
     Preparing your AR experience
@@ -691,10 +500,6 @@
 
   </div>
 
-
-  <!-- =====================================
-       FULL-SCREEN VIDEO EXPERIENCE
-       ===================================== -->
 
   <div id="videoExperience">
 
@@ -705,7 +510,6 @@
       playsinline
       webkit-playsinline
       crossorigin="anonymous"
-      controls="false"
       preload="auto"
     ></video>
 
@@ -731,18 +535,14 @@
     device-orientation-permission-ui="enabled: false"
   >
 
-
     <a-assets
       id="videoAssets">
     </a-assets>
 
-
     <a-camera
       position="0 0 0"
-      look-controls="enabled: false"
-    >
+      look-controls="enabled: false">
     </a-camera>
-
 
   </a-scene>
 
@@ -755,51 +555,28 @@
    ===================================== */
 
 const introScreen =
-  document.querySelector(
-    "#introScreen"
-  );
-
+  document.querySelector("#introScreen");
 
 const startButton =
-  document.querySelector(
-    "#startButton"
-  );
-
+  document.querySelector("#startButton");
 
 const loadingText =
-  document.querySelector(
-    "#loadingText"
-  );
-
+  document.querySelector("#loadingText");
 
 const scene =
-  document.querySelector(
-    "a-scene"
-  );
-
+  document.querySelector("a-scene");
 
 const videoAssets =
-  document.querySelector(
-    "#videoAssets"
-  );
-
+  document.querySelector("#videoAssets");
 
 const videoExperience =
-  document.querySelector(
-    "#videoExperience"
-  );
-
+  document.querySelector("#videoExperience");
 
 const experienceVideo =
-  document.querySelector(
-    "#experienceVideo"
-  );
-
+  document.querySelector("#experienceVideo");
 
 const closeVideo =
-  document.querySelector(
-    "#closeVideo"
-  );
+  document.querySelector("#closeVideo");
 
 
 let videos = [];
@@ -819,22 +596,32 @@ async function loadContent() {
 
   try {
 
-
     loadingText.style.display =
       "block";
 
 
+    /*
+      Cache-buster added.
+
+      This makes sure the browser does
+      not use an old content.json.
+    */
+
     const response =
       await fetch(
-        "./content.json?cache=" +
-        Date.now()
+        "./content.json?v=" +
+        Date.now(),
+        {
+          cache: "no-store"
+        }
       );
 
 
     if (!response.ok) {
 
       throw new Error(
-        "Could not load content.json"
+        "content.json HTTP error: " +
+        response.status
       );
 
     }
@@ -845,19 +632,30 @@ async function loadContent() {
 
 
     if (
-      !data.posters ||
+      !data ||
+      !Array.isArray(data.posters) ||
       data.posters.length === 0
     ) {
 
       throw new Error(
-        "No posters found in content.json"
+        "content.json has no posters"
       );
 
     }
 
 
+    /*
+      Clear anything previously created.
+    */
+
+    videoAssets.innerHTML = "";
+
+
+    videos = [];
+
+
     /* =================================
-       CREATE ALL VIDEOS + TARGETS
+       CREATE VIDEOS + TARGETS
        ================================= */
 
     data.posters.forEach(
@@ -869,7 +667,7 @@ async function loadContent() {
           poster.id;
 
 
-        /* CREATE AR VIDEO */
+        /* VIDEO */
 
         const video =
           document.createElement(
@@ -880,27 +678,21 @@ async function loadContent() {
         video.id =
           videoId;
 
-
         video.src =
           "./" +
           poster.video;
 
-
         video.loop =
           true;
-
 
         video.crossOrigin =
           "anonymous";
 
-
         video.playsInline =
           true;
 
-
         video.preload =
           "metadata";
-
 
         video.setAttribute(
           "webkit-playsinline",
@@ -918,7 +710,7 @@ async function loadContent() {
         );
 
 
-        /* CREATE TARGET */
+        /* TARGET */
 
         const target =
           document.createElement(
@@ -928,13 +720,12 @@ async function loadContent() {
 
         target.setAttribute(
           "mindar-image-target",
-
           "targetIndex: " +
           poster.targetIndex
         );
 
 
-        /* CREATE AR VIDEO PLANE */
+        /* AR VIDEO */
 
         const videoPlane =
           document.createElement(
@@ -944,36 +735,26 @@ async function loadContent() {
 
         videoPlane.setAttribute(
           "src",
-
-          "#" +
-          videoId
+          "#" + videoId
         );
-
 
         videoPlane.setAttribute(
           "position",
-
           "0 0 0"
         );
 
-
         videoPlane.setAttribute(
           "width",
-
           "1"
         );
-
 
         videoPlane.setAttribute(
           "height",
-
           "1"
         );
 
-
         videoPlane.setAttribute(
           "material",
-
           "shader: flat"
         );
 
@@ -988,21 +769,11 @@ async function loadContent() {
         );
 
 
-        /* =================================
-           TARGET FOUND
-           ================================= */
+        /* TARGET FOUND */
 
         target.addEventListener(
           "targetFound",
-
           async () => {
-
-
-            /*
-             * If another video experience
-             * is already active, don't
-             * interrupt it.
-             */
 
             if (
               experienceActive
@@ -1022,11 +793,6 @@ async function loadContent() {
             );
 
 
-            /*
-             * Start the premium
-             * cinematic experience.
-             */
-
             startVideoExperience(
               poster,
               video
@@ -1036,22 +802,11 @@ async function loadContent() {
         );
 
 
-        /* =================================
-           TARGET LOST
-           ================================= */
+        /* TARGET LOST */
 
         target.addEventListener(
           "targetLost",
-
           () => {
-
-
-            /*
-             * Once the cinematic video
-             * has started, it continues
-             * even if the poster leaves
-             * the camera.
-             */
 
             if (
               !experienceActive
@@ -1067,6 +822,10 @@ async function loadContent() {
       }
     );
 
+
+    /*
+      CONTENT IS READY
+    */
 
     targetsReady =
       true;
@@ -1085,23 +844,28 @@ async function loadContent() {
 
 
     console.log(
-      "AR content loaded:",
+      "SUCCESS: AR content loaded:",
       data.posters.length,
       "posters"
     );
 
 
-  } catch (error) {
+  }
 
+  catch (error) {
 
     console.error(
-      "Content database error:",
+      "CONTENT LOAD ERROR:",
       error
     );
 
 
-    loadingText.textContent =
-      "Failed to load AR content.";
+    loadingText.style.display =
+      "block";
+
+
+    loadingText.innerHTML =
+      "AR content loading failed";
 
 
     startButton.disabled =
@@ -1113,32 +877,28 @@ async function loadContent() {
 
 
 /* =====================================
-   STOP OTHER AR VIDEOS
+   STOP OTHER VIDEOS
    ===================================== */
 
 function stopOtherVideos(
   currentVideo
 ) {
 
-
   videos.forEach(
     video => {
-
 
       if (
         video !== currentVideo
       ) {
 
-
         video.pause();
-
 
         try {
 
           video.currentTime =
             0;
 
-        } catch (error) {}
+        } catch(error) {}
 
       }
 
@@ -1190,7 +950,6 @@ function waitForVideoData(
           finish
         );
 
-
         video.removeEventListener(
           "canplay",
           finish
@@ -1220,10 +979,6 @@ function waitForVideoData(
       );
 
 
-      /*
-       * Safety timeout.
-       */
-
       setTimeout(
         finish,
         2000
@@ -1236,7 +991,7 @@ function waitForVideoData(
 
 
 /* =====================================
-   WAIT FOR ACTUAL VIDEO FRAME
+   WAIT FOR VIDEO FRAME
    ===================================== */
 
 function waitForVideoFrame(
@@ -1246,28 +1001,23 @@ function waitForVideoFrame(
   return new Promise(
     resolve => {
 
-
-      /*
-       * Modern Chrome / Android
-       */
-
       if (
         "requestVideoFrameCallback"
         in video
       ) {
 
-        let finished =
+        let done =
           false;
 
 
         function finish() {
 
-          if (finished) {
+          if (done) {
             return;
           }
 
 
-          finished =
+          done =
             true;
 
 
@@ -1292,11 +1042,6 @@ function waitForVideoFrame(
       }
 
 
-      /*
-       * Fallback for browsers
-       * without requestVideoFrameCallback.
-       */
-
       requestAnimationFrame(
         () => {
 
@@ -1318,14 +1063,13 @@ function waitForVideoFrame(
 
 
 /* =====================================
-   START CINEMATIC VIDEO EXPERIENCE
+   CINEMATIC VIDEO
    ===================================== */
 
 async function startVideoExperience(
   poster,
   sourceVideo
 ) {
-
 
   if (
     experienceActive
@@ -1340,17 +1084,8 @@ async function startVideoExperience(
     true;
 
 
-  /*
-   * Stop the AR plane video.
-   */
-
   sourceVideo.pause();
 
-
-  /*
-   * Use the same video file
-   * inside the cinematic layer.
-   */
 
   experienceVideo.src =
     sourceVideo.currentSrc ||
@@ -1360,10 +1095,8 @@ async function startVideoExperience(
   experienceVideo.loop =
     true;
 
-
   experienceVideo.playsInline =
     true;
-
 
   experienceVideo.setAttribute(
     "webkit-playsinline",
@@ -1371,25 +1104,17 @@ async function startVideoExperience(
   );
 
 
-  /*
-   * Start from beginning.
-   */
-
   try {
 
     experienceVideo.currentTime =
       0;
 
-  } catch (error) {}
+  } catch(error) {}
 
 
   /*
-   * ---------------------------------
-   * INITIAL HIDDEN STATE
-   * ---------------------------------
-   *
-   * The video is NOT revealed yet.
-   */
+    Show but keep invisible.
+  */
 
   videoExperience.style.display =
     "flex";
@@ -1408,19 +1133,12 @@ async function startVideoExperience(
     "scale(0.18)";
 
 
-  /*
-   * Force browser to register
-   * the starting state.
-   */
-
   void experienceVideo.offsetWidth;
 
 
   /*
-   * ---------------------------------
-   * WAIT FOR VIDEO DATA
-   * ---------------------------------
-   */
+    Wait for actual video data.
+  */
 
   await waitForVideoData(
     experienceVideo
@@ -1428,5 +1146,209 @@ async function startVideoExperience(
 
 
   /*
-   * ---------------------------------
-   *
+    Start video first.
+  */
+
+  try {
+
+    await experienceVideo.play();
+
+  } catch(error) {
+
+    console.log(
+      "Video play:",
+      error
+    );
+
+  }
+
+
+  /*
+    Wait for a real video frame.
+  */
+
+  await waitForVideoFrame(
+    experienceVideo
+  );
+
+
+  /*
+    Now start cinematic reveal.
+  */
+
+  requestAnimationFrame(
+    () => {
+
+      requestAnimationFrame(
+        () => {
+
+          experienceVideo.style.opacity =
+            "1";
+
+          videoExperience.classList.add(
+            "reveal"
+          );
+
+        }
+      );
+
+    }
+  );
+
+}
+
+
+/* =====================================
+   CLOSE VIDEO
+   ===================================== */
+
+closeVideo.addEventListener(
+  "click",
+  () => {
+
+    experienceVideo.pause();
+
+    experienceVideo.removeAttribute(
+      "src"
+    );
+
+    experienceVideo.load();
+
+
+    videoExperience.classList.remove(
+      "reveal"
+    );
+
+
+    videoExperience.style.display =
+      "none";
+
+
+    videoExperience.style.opacity =
+      "0";
+
+
+    experienceActive =
+      false;
+
+
+    activePoster =
+      null;
+
+  }
+);
+
+
+/* =====================================
+   START AR
+   ===================================== */
+
+startButton.addEventListener(
+  "click",
+  async () => {
+
+    if (
+      !targetsReady
+    ) {
+
+      console.log(
+        "AR is not ready yet"
+      );
+
+      return;
+
+    }
+
+
+    startButton.disabled =
+      true;
+
+
+    startButton.textContent =
+      "OPENING...";
+
+
+    const arSystem =
+      scene.systems[
+        "mindar-image-system"
+      ];
+
+
+    if (!arSystem) {
+
+      console.error(
+        "MindAR system not found"
+      );
+
+
+      startButton.disabled =
+        false;
+
+
+      startButton.textContent =
+        "UNVEIL ✦";
+
+
+      return;
+
+    }
+
+
+    try {
+
+      /*
+        Keep the working AR startup.
+      */
+
+      await arSystem.start();
+
+
+      introScreen.classList.add(
+        "hide"
+      );
+
+
+      setTimeout(
+        () => {
+
+          introScreen.style.display =
+            "none";
+
+        },
+        600
+      );
+
+
+    }
+
+    catch(error) {
+
+      console.error(
+        "AR START ERROR:",
+        error
+      );
+
+
+      startButton.disabled =
+        false;
+
+
+      startButton.textContent =
+        "UNVEIL ✦";
+
+    }
+
+  }
+);
+
+
+/* =====================================
+   LOAD
+   ===================================== */
+
+loadContent();
+
+</script>
+
+</body>
+</html>
