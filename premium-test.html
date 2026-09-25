@@ -1,667 +1,844 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-<meta name="viewport"
-      content="width=device-width,
-               initial-scale=1.0,
-               maximum-scale=1.0,
-               user-scalable=no">
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
-<script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <style>
 
-<style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-* {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-}
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: Arial, Helvetica, sans-serif;
+    }
 
-html,
-body {
-  margin: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: #000;
-  font-family: Arial, Helvetica, sans-serif;
-}
 
+    /* =====================================
+       PREMIUM INTRO SCREEN
+       ===================================== */
 
-/* =====================================================
-   PREMIUM INTRO
-   ===================================================== */
+    #introScreen {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
 
-#introScreen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
 
-  position: fixed;
-  inset: 0;
+      padding: 30px;
 
-  z-index: 99999;
+      background:
+        radial-gradient(
+          circle at 50% 32%,
+          rgba(255, 193, 7, 0.14),
+          transparent 34%
+        ),
+        linear-gradient(
+          145deg,
+          #000000 0%,
+          #080808 55%,
+          #15110a 100%
+        );
 
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+      color: #fff;
+      text-align: center;
+    }
 
-  padding: 30px;
 
-  background:
-    radial-gradient(
-      circle at 50% 32%,
-      rgba(255,193,7,0.14),
-      transparent 34%
-    ),
-    linear-gradient(
-      145deg,
-      #000000 0%,
-      #080808 55%,
-      #15110a 100%
-    );
+    #introScreen::before {
+      content: "";
 
-  color: #fff;
-  text-align: center;
+      position: absolute;
 
-  transition:
-    opacity 0.55s ease,
-    transform 0.55s ease;
-}
+      inset: 14px;
 
-#introScreen::before {
+      border:
+        1px solid
+        rgba(255, 196, 60, 0.22);
 
-  content: "";
+      border-radius: 22px;
 
-  position: absolute;
-  inset: 14px;
+      pointer-events: none;
+    }
 
-  border:
-    1px solid
-    rgba(255,196,60,0.22);
 
-  border-radius: 22px;
+    /* =====================================
+       LOGO
+       ===================================== */
 
-  pointer-events: none;
-}
+    #brandLogo {
 
-#introScreen.hide {
+      width:
+        min(78vw, 360px);
 
-  opacity: 0;
-  transform: scale(1.03);
+      max-height: 210px;
 
-  pointer-events: none;
-}
+      object-fit: contain;
 
+      margin-bottom: 22px;
 
-#brandLogo {
+      filter:
+        drop-shadow(
+          0 0 12px
+          rgba(255, 190, 40, 0.28)
+        )
+        drop-shadow(
+          0 0 30px
+          rgba(255, 180, 20, 0.12)
+        );
 
-  width: min(78vw,360px);
-  max-height: 210px;
+      animation:
+        logoAppear 1.2s ease forwards;
+    }
 
-  object-fit: contain;
 
-  margin-bottom: 22px;
+    @keyframes logoAppear {
 
-  filter:
-    drop-shadow(
-      0 0 12px
-      rgba(255,190,40,0.28)
-    )
-    drop-shadow(
-      0 0 30px
-      rgba(255,180,20,0.12)
-    );
+      from {
+        opacity: 0;
+        transform: scale(0.88);
+      }
 
-  animation:
-    logoAppear 1.1s ease forwards;
-}
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
 
-@keyframes logoAppear {
+    }
 
-  from {
-    opacity: 0;
-    transform: scale(0.88);
-  }
 
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+    /* =====================================
+       BRAND LABEL
+       ===================================== */
 
-}
+    #experienceLabel {
 
+      font-size: 11px;
 
-#experienceLabel {
+      letter-spacing: 4px;
 
-  font-size: 11px;
+      color:
+        rgba(255, 215, 120, 0.8);
 
-  letter-spacing: 4px;
+      margin-bottom: 12px;
 
-  color:
-    rgba(255,215,120,0.8);
+      text-transform: uppercase;
+    }
 
-  margin-bottom: 12px;
 
-  text-transform: uppercase;
-}
+    /* =====================================
+       MAIN TITLE
+       ===================================== */
 
+    #mainTitle {
 
-#mainTitle {
+      margin: 0;
 
-  margin: 0;
+      font-size:
+        clamp(27px, 8vw, 44px);
 
-  font-size:
-    clamp(27px,8vw,44px);
+      line-height: 1.08;
 
-  line-height: 1.08;
+      font-weight: 700;
 
-  font-weight: 700;
+      letter-spacing: 1px;
 
-  letter-spacing: 1px;
+      background:
+        linear-gradient(
+          90deg,
+          #fff4c7,
+          #ffd34d,
+          #ffffff,
+          #d99b20
+        );
 
-  background:
-    linear-gradient(
-      90deg,
-      #fff4c7,
-      #ffd34d,
-      #ffffff,
-      #d99b20
-    );
+      -webkit-background-clip: text;
 
-  -webkit-background-clip: text;
-  background-clip: text;
+      background-clip: text;
 
-  color: transparent;
-}
+      color: transparent;
+    }
 
 
-#tagline {
+    /* =====================================
+       TAGLINE
+       ===================================== */
 
-  margin-top: 9px;
+    #tagline {
 
-  font-size: 13px;
+      margin-top: 9px;
 
-  letter-spacing: 1.5px;
+      font-size: 13px;
 
-  color:
-    rgba(255,215,130,0.72);
+      letter-spacing: 1.5px;
 
-  text-transform: uppercase;
-}
+      color:
+        rgba(255, 215, 130, 0.72);
 
+      text-transform: uppercase;
+    }
 
-#description {
 
-  max-width: 340px;
+    /* =====================================
+       DESCRIPTION
+       ===================================== */
 
-  margin:
-    16px 0 28px;
+    #description {
 
-  font-size: 14px;
+      max-width: 340px;
 
-  line-height: 1.65;
+      margin:
+        16px 0 28px;
 
-  color:
-    rgba(255,255,255,0.68);
-}
+      font-size: 14px;
 
+      line-height: 1.65;
 
-#startButton {
+      color:
+        rgba(255, 255, 255, 0.68);
+    }
 
-  min-width: 225px;
 
-  padding:
-    17px 30px;
+    /* =====================================
+       CTA BUTTON
+       ===================================== */
 
-  border:
-    1px solid
-    rgba(255,220,120,0.75);
+    #startButton {
 
-  border-radius: 999px;
+      position: relative;
 
-  background:
-    linear-gradient(
-      135deg,
-      #fff1a8,
-      #d99b20 45%,
-      #ffe47a
-    );
+      min-width: 225px;
 
-  color: #080808;
+      padding:
+        17px 30px;
 
-  font-size: 15px;
+      border:
+        1px solid
+        rgba(255, 220, 120, 0.75);
 
-  font-weight: 800;
+      border-radius: 999px;
 
-  letter-spacing: 2.5px;
+      background:
+        linear-gradient(
+          135deg,
+          #fff1a8,
+          #d99b20 45%,
+          #ffe47a
+        );
 
-  cursor: pointer;
+      color: #080808;
 
-  box-shadow:
-    0 0 18px
-    rgba(255,194,50,0.25),
+      font-size: 15px;
 
-    inset 0 1px 1px
-    rgba(255,255,255,0.8);
+      font-weight: 800;
 
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
+      letter-spacing: 2.5px;
 
-#startButton:active {
+      cursor: pointer;
 
-  transform:
-    scale(0.96);
-}
+      box-shadow:
+        0 0 18px
+        rgba(255, 194, 50, 0.25),
 
-#startButton:disabled {
+        inset 0 1px 1px
+        rgba(255,255,255,0.8);
 
-  opacity: 0.55;
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+    }
 
-  cursor: default;
-}
 
+    #startButton:active {
 
-#scanHint {
+      transform:
+        scale(0.96);
 
-  margin-top: 22px;
+      box-shadow:
+        0 0 28px
+        rgba(255, 194, 50, 0.4);
+    }
 
-  font-size: 12px;
 
-  line-height: 1.5;
+    #startButton:disabled {
 
-  color:
-    rgba(255,255,255,0.48);
-}
+      opacity: 0.55;
 
-#scanHint span {
+      cursor: default;
+    }
 
-  color: #e8b83d;
-}
 
+    /* =====================================
+       CAMERA INSTRUCTION
+       ===================================== */
 
-/* =====================================================
-   VIDEO REVEAL
-   ===================================================== */
+    #scanHint {
 
-#videoExperience {
+      margin-top: 22px;
 
-  position: fixed;
+      font-size: 12px;
 
-  inset: 0;
+      line-height: 1.5;
 
-  z-index: 90000;
+      color:
+        rgba(255,255,255,0.48);
+    }
 
-  display: none;
 
-  align-items: center;
-  justify-content: center;
+    #scanHint span {
 
-  background:
-    rgba(0,0,0,0);
+      color:
+        #e8b83d;
+    }
 
-  opacity: 0;
 
-  pointer-events: none;
+    /* =====================================
+       LOADING
+       ===================================== */
 
-  overflow: hidden;
+    #loadingText {
 
-  transition:
-    opacity 0.5s ease,
-    background 0.8s ease;
-}
+      position: fixed;
 
+      z-index: 100000;
 
-/*
-   IMPORTANT:
+      left: 50%;
 
-   Final video dimensions are fixed.
+      bottom: 34px;
 
-   Only SCALE is animated.
+      transform:
+        translateX(-50%);
 
-   This is much smoother than animating
-   width + height simultaneously.
-*/
+      color:
+        rgba(255,255,255,0.6);
 
-#experienceVideo {
+      font-size: 12px;
 
-  display: block;
+      letter-spacing: 1px;
 
-  width: 100vw;
-  height: 100vh;
+      display: none;
+    }
 
-  object-fit: contain;
 
-  background: #000;
+    .loaderDot {
 
-  border-radius: 22px;
+      display: inline-block;
 
-  transform:
-    scale(0.18);
+      width: 5px;
 
-  transform-origin:
-    center center;
+      height: 5px;
 
-  will-change:
-    transform;
+      margin-left: 4px;
 
-  transition:
-    transform
-    2.5s
-    cubic-bezier(
-      0.16,
-      1,
-      0.3,
-      1
-    ),
+      border-radius: 50%;
 
-    border-radius
-    2s ease;
-}
+      background: #e8b83d;
 
+      animation:
+        pulse 1.2s
+        infinite
+        ease-in-out;
+    }
 
-#videoExperience.reveal {
 
-  opacity: 1;
+    @keyframes pulse {
 
-  background:
-    rgba(0,0,0,0.96);
+      0%, 100% {
+        opacity: 0.25;
+        transform: scale(0.7);
+      }
 
-  pointer-events: auto;
-}
+      50% {
+        opacity: 1;
+        transform: scale(1);
+      }
 
+    }
 
-#videoExperience.reveal
-#experienceVideo {
 
-  transform:
-    scale(1);
+    /* =====================================
+       INTRO EXIT
+       ===================================== */
 
-  border-radius: 0;
-}
+    #introScreen.hide {
 
+      animation:
+        introExit
+        0.55s
+        ease
+        forwards;
+    }
 
-/* =====================================================
-   CLOSE
-   ===================================================== */
 
-#closeVideo {
+    @keyframes introExit {
 
-  position: fixed;
+      to {
 
-  top: 22px;
-  right: 22px;
+        opacity: 0;
 
-  z-index: 90010;
+        transform:
+          scale(1.03);
 
-  width: 42px;
-  height: 42px;
+        pointer-events: none;
+      }
 
-  border:
-    1px solid
-    rgba(255,255,255,0.35);
+    }
 
-  border-radius: 50%;
 
-  background:
-    rgba(0,0,0,0.55);
+    /* =====================================
+       VIDEO EXPERIENCE OVERLAY
+       ===================================== */
 
-  color: #fff;
+    #videoExperience {
 
-  font-size: 20px;
+      position: fixed;
 
-  display: none;
+      inset: 0;
 
-  align-items: center;
-  justify-content: center;
+      z-index: 90000;
 
-  cursor: pointer;
-}
+      display: none;
 
-#videoExperience.reveal
-#closeVideo {
+      align-items: center;
 
-  display: flex;
-}
+      justify-content: center;
 
+      background:
+        rgba(0, 0, 0, 0);
 
-/* =====================================================
-   SMALL STATUS
-   ===================================================== */
+      pointer-events: none;
 
-#status {
+      overflow: hidden;
 
-  position: fixed;
+      opacity: 0;
 
-  left: 50%;
-  bottom: 30px;
+      transition:
+        opacity 0.45s ease,
+        background 0.8s ease;
+    }
 
-  transform:
-    translateX(-50%);
 
-  z-index: 10000;
+    /*
+      =========================================
+      CINEMATIC VIDEO
+      =========================================
 
-  padding:
-    9px 16px;
+      IMPORTANT:
 
-  border-radius: 30px;
+      The video keeps its final size.
 
-  background:
-    rgba(0,0,0,0.45);
+      Only transform: scale()
+      is animated.
 
-  color:
-    rgba(255,255,255,0.65);
+      This avoids width/height layout
+      recalculation and makes the zoom
+      much smoother on mobile.
+    */
 
-  font-size: 11px;
+    #experienceVideo {
 
-  letter-spacing: 1px;
+      display: block;
 
-  display: none;
+      width: 100vw;
 
-  pointer-events: none;
-}
+      height: 100vh;
 
-</style>
+      object-fit: contain;
 
+      background: #000;
+
+      border-radius: 18px;
+
+      opacity: 0;
+
+      transform:
+        scale(0.18);
+
+      transform-origin:
+        center center;
+
+      will-change:
+        transform,
+        opacity;
+
+      backface-visibility:
+        hidden;
+
+      -webkit-backface-visibility:
+        hidden;
+
+      transition:
+
+        transform
+        3.2s
+        cubic-bezier(
+          0.16,
+          1,
+          0.3,
+          1
+        ),
+
+        opacity
+        0.35s
+        ease,
+
+        border-radius
+        2.4s
+        ease;
+    }
+
+
+    /*
+      Reveal state
+    */
+
+    #videoExperience.reveal {
+
+      background:
+        rgba(0, 0, 0, 0.94);
+
+      pointer-events:
+        auto;
+
+      opacity: 1;
+    }
+
+
+    #videoExperience.reveal
+    #experienceVideo {
+
+      transform:
+        scale(1);
+
+      opacity: 1;
+
+      border-radius: 0;
+
+      box-shadow:
+        0 0 70px
+        rgba(255, 194, 50, 0.08);
+    }
+
+
+    /* =====================================
+       GOLD REVEAL FRAME
+       ===================================== */
+
+    #revealFrame {
+
+      position: absolute;
+
+      inset: 20px;
+
+      border:
+        1px solid
+        rgba(255, 204, 80, 0.5);
+
+      border-radius: 18px;
+
+      opacity: 0;
+
+      pointer-events: none;
+
+      transition:
+        opacity 0.45s ease;
+    }
+
+
+    #videoExperience.reveal
+    #revealFrame {
+
+      opacity: 0;
+    }
+
+
+    /* =====================================
+       VIDEO CLOSE BUTTON
+       ===================================== */
+
+    #closeVideo {
+
+      position: fixed;
+
+      top: 22px;
+
+      right: 22px;
+
+      z-index: 90010;
+
+      width: 42px;
+
+      height: 42px;
+
+      border:
+        1px solid
+        rgba(255,255,255,0.35);
+
+      border-radius: 50%;
+
+      background:
+        rgba(0,0,0,0.55);
+
+      color: #fff;
+
+      font-size: 20px;
+
+      display: none;
+
+      align-items: center;
+
+      justify-content: center;
+
+      cursor: pointer;
+
+      pointer-events: auto;
+    }
+
+
+    #videoExperience.reveal
+    #closeVideo {
+
+      display: flex;
+    }
+
+
+  </style>
 </head>
 
 
 <body>
 
 
-<!-- =====================================================
-     PREMIUM OPENING
-     ===================================================== -->
+  <!-- =====================================
+       PREMIUM OPENING SCREEN
+       ===================================== -->
 
-<div id="introScreen">
+  <div id="introScreen">
 
-  <img
-    id="brandLogo"
-    src="./logo.png"
-    alt="Peculiar Print Hub"
-  >
 
-  <div id="experienceLabel">
-    PECULIAR PRINT HUB
+    <img
+      id="brandLogo"
+      src="./logo.png"
+      alt="Peculiar Print Hub"
+    >
+
+
+    <div id="experienceLabel">
+      PECULIAR PRINT HUB
+    </div>
+
+
+    <h1 id="mainTitle">
+      BRING IT TO LIFE
+    </h1>
+
+
+    <div id="tagline">
+      ONE PRINT. A WHOLE NEW EXPERIENCE.
+    </div>
+
+
+    <p id="description">
+      Your printed poster has more to reveal.
+      Point your camera at the poster and watch
+      your print come alive.
+    </p>
+
+
+    <button
+      id="startButton"
+      disabled
+    >
+      UNVEIL ✦
+    </button>
+
+
+    <div id="scanHint">
+
+      <span>✦</span>
+
+      Allow camera access when prompted
+
+      <span>✦</span>
+
+    </div>
+
   </div>
 
-  <h1 id="mainTitle">
-    BRING IT TO LIFE
-  </h1>
 
-  <div id="tagline">
-    ONE PRINT. A WHOLE NEW EXPERIENCE.
-  </div>
+  <!-- =====================================
+       LOADING
+       ===================================== -->
 
-  <p id="description">
+  <div id="loadingText">
 
-    Your printed poster has more to reveal.
-    Point your camera at the poster and watch
-    your print come alive.
+    Preparing your AR experience
 
-  </p>
-
-  <button
-    id="startButton"
-    disabled
-  >
-    LOADING...
-  </button>
-
-  <div id="scanHint">
-
-    <span>✦</span>
-    Allow camera access when prompted
-    <span>✦</span>
+    <span class="loaderDot"></span>
 
   </div>
 
-</div>
+
+  <!-- =====================================
+       FULL-SCREEN VIDEO EXPERIENCE
+       ===================================== -->
+
+  <div id="videoExperience">
+
+    <div id="revealFrame"></div>
+
+    <video
+      id="experienceVideo"
+      playsinline
+      webkit-playsinline
+      crossorigin="anonymous"
+      controls="false"
+      preload="auto"
+    ></video>
+
+    <button
+      id="closeVideo"
+      aria-label="Close video"
+    >
+      ×
+    </button>
+
+  </div>
 
 
-<!-- =====================================================
-     STATUS
-     ===================================================== -->
+  <!-- =====================================
+       AR ENGINE
+       ===================================== -->
 
-<div id="status">
-  STARTING CAMERA...
-</div>
-
-
-<!-- =====================================================
-     FULL VIDEO EXPERIENCE
-     ===================================================== -->
-
-<div id="videoExperience">
-
-  <video
-    id="experienceVideo"
-    playsinline
-    webkit-playsinline
-    preload="auto"
-  ></video>
-
-  <button
-    id="closeVideo"
-    aria-label="Close"
+  <a-scene
+    mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;"
+    color-space="sRGB"
+    renderer="colorManagement: true"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
   >
-    ×
-  </button>
-
-</div>
 
 
-<!-- =====================================================
-     MINDAR / A-FRAME
-     
-     IMPORTANT:
-     NO CUSTOM CAMERA CSS.
-     This structure follows the working
-     production page / MindAR structure.
-     ===================================================== -->
+    <a-assets
+      id="videoAssets">
+    </a-assets>
 
-<a-scene
 
-  mindar-image="
-    imageTargetSrc: ./targets.mind;
-    autoStart: false;
-    uiLoading: no;
-    uiError: no;
-    uiScanning: no;
-  "
+    <a-camera
+      position="0 0 0"
+      look-controls="enabled: false"
+    >
+    </a-camera>
 
-  color-space="sRGB"
 
-  renderer="
-    colorManagement: true
-  "
-
-  vr-mode-ui="
-    enabled: false
-  "
-
-  device-orientation-permission-ui="
-    enabled: false
-  "
-
->
-
-  <a-assets
-    id="videoAssets">
-  </a-assets>
-
-  <a-camera
-    position="0 0 0"
-    look-controls="enabled: false"
-  ></a-camera>
-
-</a-scene>
+  </a-scene>
 
 
 <script>
 
-/* =====================================================
-   ELEMENTS
-   ===================================================== */
 
-const scene =
-  document.querySelector("a-scene");
+/* =====================================
+   ELEMENTS
+   ===================================== */
 
 const introScreen =
-  document.querySelector("#introScreen");
+  document.querySelector(
+    "#introScreen"
+  );
+
 
 const startButton =
-  document.querySelector("#startButton");
+  document.querySelector(
+    "#startButton"
+  );
+
+
+const loadingText =
+  document.querySelector(
+    "#loadingText"
+  );
+
+
+const scene =
+  document.querySelector(
+    "a-scene"
+  );
+
 
 const videoAssets =
-  document.querySelector("#videoAssets");
+  document.querySelector(
+    "#videoAssets"
+  );
+
 
 const videoExperience =
-  document.querySelector("#videoExperience");
+  document.querySelector(
+    "#videoExperience"
+  );
+
 
 const experienceVideo =
-  document.querySelector("#experienceVideo");
+  document.querySelector(
+    "#experienceVideo"
+  );
+
 
 const closeVideo =
-  document.querySelector("#closeVideo");
+  document.querySelector(
+    "#closeVideo"
+  );
 
-const status =
-  document.querySelector("#status");
-
-
-/* =====================================================
-   STATE
-   ===================================================== */
 
 let videos = [];
 
 let targetsReady = false;
 
+let activePoster = null;
+
 let experienceActive = false;
 
 
-/* =====================================================
+/* =====================================
    LOAD CONTENT
-   ===================================================== */
+   ===================================== */
 
 async function loadContent() {
 
   try {
 
+
+    loadingText.style.display =
+      "block";
+
+
     const response =
       await fetch(
-        "./content.json?test=" +
+        "./content.json?cache=" +
         Date.now()
       );
+
 
     if (!response.ok) {
 
       throw new Error(
-        "content.json failed"
+        "Could not load content.json"
       );
 
     }
+
 
     const data =
       await response.json();
@@ -669,144 +846,163 @@ async function loadContent() {
 
     if (
       !data.posters ||
-      !data.posters.length
+      data.posters.length === 0
     ) {
 
       throw new Error(
-        "No posters"
+        "No posters found in content.json"
       );
 
     }
 
 
+    /* =================================
+       CREATE ALL VIDEOS + TARGETS
+       ================================= */
+
     data.posters.forEach(
       poster => {
 
-        /*
-          ---------------------------------------
-          VIDEO ASSET
-          ---------------------------------------
-        */
+
+        const videoId =
+          "video_" +
+          poster.id;
+
+
+        /* CREATE AR VIDEO */
 
         const video =
           document.createElement(
             "video"
           );
 
+
         video.id =
-          "video_" +
-          poster.id;
+          videoId;
+
 
         video.src =
           "./" +
           poster.video;
 
+
         video.loop =
           true;
 
-        video.preload =
-          "auto";
+
+        video.crossOrigin =
+          "anonymous";
+
 
         video.playsInline =
           true;
+
+
+        video.preload =
+          "metadata";
+
 
         video.setAttribute(
           "webkit-playsinline",
           ""
         );
 
+
         videoAssets.appendChild(
           video
         );
+
 
         videos.push(
           video
         );
 
 
-        /*
-          ---------------------------------------
-          TARGET
-          ---------------------------------------
-        */
+        /* CREATE TARGET */
 
         const target =
           document.createElement(
             "a-entity"
           );
 
+
         target.setAttribute(
           "mindar-image-target",
+
           "targetIndex: " +
           poster.targetIndex
         );
 
 
-        /*
-          Keep a tiny A-Frame video plane
-          exactly like production.
+        /* CREATE AR VIDEO PLANE */
 
-          It is invisible, so the user only
-          sees the premium overlay.
-
-          Keeping this structure reduces
-          differences from the working
-          production AR engine.
-        */
-
-        const plane =
+        const videoPlane =
           document.createElement(
             "a-video"
           );
 
-        plane.setAttribute(
+
+        videoPlane.setAttribute(
           "src",
-          "#" + video.id
+
+          "#" +
+          videoId
         );
 
-        plane.setAttribute(
-          "width",
-          "0.001"
-        );
 
-        plane.setAttribute(
-          "height",
-          "0.001"
-        );
-
-        plane.setAttribute(
+        videoPlane.setAttribute(
           "position",
+
           "0 0 0"
         );
 
-        plane.setAttribute(
-          "visible",
-          "false"
+
+        videoPlane.setAttribute(
+          "width",
+
+          "1"
         );
 
-        target.appendChild(
-          plane
+
+        videoPlane.setAttribute(
+          "height",
+
+          "1"
         );
+
+
+        videoPlane.setAttribute(
+          "material",
+
+          "shader: flat"
+        );
+
+
+        target.appendChild(
+          videoPlane
+        );
+
 
         scene.appendChild(
           target
         );
 
 
-        /*
-          ---------------------------------------
-          TARGET FOUND
-          ---------------------------------------
-        */
+        /* =================================
+           TARGET FOUND
+           ================================= */
 
         target.addEventListener(
           "targetFound",
+
           async () => {
 
-            console.log(
-              "TARGET FOUND:",
-              poster.id
-            );
+
+            /*
+             * If another video experience
+             * is already active, don't
+             * interrupt it.
+             */
 
             if (
               experienceActive
@@ -816,11 +1012,23 @@ async function loadContent() {
 
             }
 
+
+            activePoster =
+              poster;
+
+
             stopOtherVideos(
               video
             );
 
-            await revealVideo(
+
+            /*
+             * Start the premium
+             * cinematic experience.
+             */
+
+            startVideoExperience(
+              poster,
               video
             );
 
@@ -828,15 +1036,22 @@ async function loadContent() {
         );
 
 
-        /*
-          ---------------------------------------
-          TARGET LOST
-          ---------------------------------------
-        */
+        /* =================================
+           TARGET LOST
+           ================================= */
 
         target.addEventListener(
           "targetLost",
+
           () => {
+
+
+            /*
+             * Once the cinematic video
+             * has started, it continues
+             * even if the poster leaves
+             * the camera.
+             */
 
             if (
               !experienceActive
@@ -856,56 +1071,74 @@ async function loadContent() {
     targetsReady =
       true;
 
+
+    loadingText.style.display =
+      "none";
+
+
     startButton.disabled =
       false;
+
 
     startButton.textContent =
       "UNVEIL ✦";
 
+
     console.log(
-      "Loaded posters:",
-      data.posters.length
+      "AR content loaded:",
+      data.posters.length,
+      "posters"
     );
 
-  }
 
-  catch(error) {
+  } catch (error) {
+
 
     console.error(
+      "Content database error:",
       error
     );
 
-    startButton.textContent =
-      "RELOAD";
+
+    loadingText.textContent =
+      "Failed to load AR content.";
+
+
+    startButton.disabled =
+      true;
 
   }
 
 }
 
 
-/* =====================================================
-   STOP OTHER VIDEOS
-   ===================================================== */
+/* =====================================
+   STOP OTHER AR VIDEOS
+   ===================================== */
 
 function stopOtherVideos(
-  current
+  currentVideo
 ) {
+
 
   videos.forEach(
     video => {
 
+
       if (
-        video !== current
+        video !== currentVideo
       ) {
+
 
         video.pause();
 
+
         try {
 
-          video.currentTime = 0;
+          video.currentTime =
+            0;
 
-        }
-        catch(e) {}
+        } catch (error) {}
 
       }
 
@@ -915,158 +1148,11 @@ function stopOtherVideos(
 }
 
 
-/* =====================================================
-   VIDEO REVEAL
-   ===================================================== */
+/* =====================================
+   WAIT FOR VIDEO DATA
+   ===================================== */
 
-async function revealVideo(
-  sourceVideo
-) {
-
-  if (
-    experienceActive
-  ) {
-
-    return;
-
-  }
-
-
-  experienceActive =
-    true;
-
-
-  /*
-    Copy same source.
-  */
-
-  experienceVideo.src =
-    sourceVideo.currentSrc ||
-    sourceVideo.src;
-
-
-  experienceVideo.loop =
-    true;
-
-  experienceVideo.playsInline =
-    true;
-
-  experienceVideo.setAttribute(
-    "webkit-playsinline",
-    ""
-  );
-
-
-  /*
-    Reset video.
-  */
-
-  try {
-
-    experienceVideo.currentTime =
-      0;
-
-  }
-  catch(e) {}
-
-
-  /*
-    Prepare hidden overlay.
-  */
-
-  videoExperience.classList.remove(
-    "reveal"
-  );
-
-  videoExperience.style.display =
-    "flex";
-
-  videoExperience.style.opacity =
-    "0";
-
-
-  /*
-    Force initial transform.
-  */
-
-  experienceVideo.style.transform =
-    "scale(0.18)";
-
-  void experienceVideo.offsetWidth;
-
-
-  /*
-    VERY IMPORTANT:
-
-    Wait until browser has enough
-    video data before starting
-    the visual reveal.
-
-    This prevents the frozen
-    first-frame effect.
-  */
-
-  try {
-
-    await waitForVideoFrame(
-      experienceVideo
-    );
-
-  }
-  catch(e) {}
-
-
-  /*
-    Start playback BEFORE reveal.
-  */
-
-  try {
-
-    await experienceVideo.play();
-
-  }
-  catch(error) {
-
-    console.log(
-      "Playback waiting:",
-      error
-    );
-
-  }
-
-
-  /*
-    Tiny delay lets the first
-    decoded frame actually appear.
-  */
-
-  requestAnimationFrame(
-    () => {
-
-      requestAnimationFrame(
-        () => {
-
-          videoExperience.style.opacity =
-            "1";
-
-          videoExperience.classList.add(
-            "reveal"
-          );
-
-        }
-      );
-
-    }
-  );
-
-}
-
-
-/* =====================================================
-   WAIT FOR VIDEO FRAME
-   ===================================================== */
-
-function waitForVideoFrame(
+function waitForVideoData(
   video
 ) {
 
@@ -1084,44 +1170,63 @@ function waitForVideoFrame(
       }
 
 
-      const done =
-        () => {
+      let finished =
+        false;
 
-          video.removeEventListener(
-            "loadeddata",
-            done
-          );
 
-          video.removeEventListener(
-            "canplay",
-            done
-          );
+      function finish() {
 
-          resolve();
+        if (finished) {
+          return;
+        }
 
-        };
+
+        finished =
+          true;
+
+
+        video.removeEventListener(
+          "loadeddata",
+          finish
+        );
+
+
+        video.removeEventListener(
+          "canplay",
+          finish
+        );
+
+
+        resolve();
+
+      }
 
 
       video.addEventListener(
         "loadeddata",
-        done,
+        finish,
         {
           once: true
         }
       );
+
 
       video.addEventListener(
         "canplay",
-        done,
+        finish,
         {
           once: true
         }
       );
 
 
+      /*
+       * Safety timeout.
+       */
+
       setTimeout(
-        resolve,
-        1500
+        finish,
+        2000
       );
 
     }
@@ -1130,182 +1235,198 @@ function waitForVideoFrame(
 }
 
 
-/* =====================================================
-   CLOSE VIDEO
-   ===================================================== */
+/* =====================================
+   WAIT FOR ACTUAL VIDEO FRAME
+   ===================================== */
 
-closeVideo.addEventListener(
-  "click",
-  () => {
+function waitForVideoFrame(
+  video
+) {
 
-    experienceVideo.pause();
-
-    experienceVideo.removeAttribute(
-      "src"
-    );
-
-    experienceVideo.load();
+  return new Promise(
+    resolve => {
 
 
-    videoExperience.classList.remove(
-      "reveal"
-    );
+      /*
+       * Modern Chrome / Android
+       */
 
-    videoExperience.style.display =
-      "none";
+      if (
+        "requestVideoFrameCallback"
+        in video
+      ) {
 
-    videoExperience.style.opacity =
-      "0";
-
-
-    experienceActive =
-      false;
-
-  }
-);
+        let finished =
+          false;
 
 
-/* =====================================================
-   AR READY
-   ===================================================== */
+        function finish() {
 
-scene.addEventListener(
-  "arReady",
-  () => {
-
-    console.log(
-      "MindAR READY"
-    );
-
-    status.style.display =
-      "none";
-
-  }
-);
+          if (finished) {
+            return;
+          }
 
 
-/* =====================================================
-   AR ERROR
-   ===================================================== */
-
-scene.addEventListener(
-  "arError",
-  () => {
-
-    console.error(
-      "MindAR CAMERA ERROR"
-    );
-
-    status.style.display =
-      "none";
-
-    alert(
-      "Camera could not start. Please allow camera permission and try again."
-    );
-
-  }
-);
+          finished =
+            true;
 
 
-/* =====================================================
-   START AR
-   ===================================================== */
+          resolve();
 
-startButton.addEventListener(
-  "click",
-  () => {
-
-    if (
-      !targetsReady
-    ) {
-
-      return;
-
-    }
+        }
 
 
-    const arSystem =
-      scene.systems[
-        "mindar-image-system"
-      ];
+        video.requestVideoFrameCallback(
+          finish
+        );
 
 
-    if (
-      !arSystem
-    ) {
+        setTimeout(
+          finish,
+          1200
+        );
 
-      alert(
-        "AR system is not ready. Please reload."
+
+        return;
+
+      }
+
+
+      /*
+       * Fallback for browsers
+       * without requestVideoFrameCallback.
+       */
+
+      requestAnimationFrame(
+        () => {
+
+          requestAnimationFrame(
+            () => {
+
+              resolve();
+
+            }
+          );
+
+        }
       );
 
-      return;
-
     }
+  );
+
+}
 
 
-    /*
-      IMPORTANT:
+/* =====================================
+   START CINEMATIC VIDEO EXPERIENCE
+   ===================================== */
 
-      NO await here.
-
-      MindAR official examples
-      start the engine directly.
-    */
-
-    try {
-
-      arSystem.start();
-
-    }
-
-    catch(error) {
-
-      console.error(
-        error
-      );
-
-      return;
-
-    }
+async function startVideoExperience(
+  poster,
+  sourceVideo
+) {
 
 
-    /*
-      Hide premium intro immediately.
+  if (
+    experienceActive
+  ) {
 
-      Camera is now controlled by
-      MindAR underneath.
-    */
-
-    introScreen.classList.add(
-      "hide"
-    );
-
-
-    status.style.display =
-      "block";
-
-
-    setTimeout(
-      () => {
-
-        introScreen.style.display =
-          "none";
-
-      },
-      600
-    );
+    return;
 
   }
-);
 
 
-/* =====================================================
-   LOAD
-   ===================================================== */
+  experienceActive =
+    true;
 
-loadContent();
 
-</script>
+  /*
+   * Stop the AR plane video.
+   */
 
-</body>
-</html>
+  sourceVideo.pause();
+
+
+  /*
+   * Use the same video file
+   * inside the cinematic layer.
+   */
+
+  experienceVideo.src =
+    sourceVideo.currentSrc ||
+    sourceVideo.src;
+
+
+  experienceVideo.loop =
+    true;
+
+
+  experienceVideo.playsInline =
+    true;
+
+
+  experienceVideo.setAttribute(
+    "webkit-playsinline",
+    ""
+  );
+
+
+  /*
+   * Start from beginning.
+   */
+
+  try {
+
+    experienceVideo.currentTime =
+      0;
+
+  } catch (error) {}
+
+
+  /*
+   * ---------------------------------
+   * INITIAL HIDDEN STATE
+   * ---------------------------------
+   *
+   * The video is NOT revealed yet.
+   */
+
+  videoExperience.style.display =
+    "flex";
+
+
+  videoExperience.classList.remove(
+    "reveal"
+  );
+
+
+  experienceVideo.style.opacity =
+    "0";
+
+
+  experienceVideo.style.transform =
+    "scale(0.18)";
+
+
+  /*
+   * Force browser to register
+   * the starting state.
+   */
+
+  void experienceVideo.offsetWidth;
+
+
+  /*
+   * ---------------------------------
+   * WAIT FOR VIDEO DATA
+   * ---------------------------------
+   */
+
+  await waitForVideoData(
+    experienceVideo
+  );
+
+
+  /*
+   * ---------------------------------
+   *
