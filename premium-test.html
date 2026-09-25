@@ -156,10 +156,10 @@
       pointer-events: none;
 
       transition:
-        width 4.5s
+        width 3s
         cubic-bezier(0.22, 1, 0.36, 1),
 
-        height 4.5s
+        height 3s
         cubic-bezier(0.22, 1, 0.36, 1);
     }
 
@@ -217,6 +217,7 @@
 
       display: block;
     }
+
 
   </style>
 
@@ -295,30 +296,36 @@ const startButton =
     "#startButton"
   );
 
+
 const loadingText =
   document.querySelector(
     "#loadingText"
   );
+
 
 const status =
   document.querySelector(
     "#status"
   );
 
+
 const scene =
   document.querySelector(
     "a-scene"
   );
+
 
 const videoAssets =
   document.querySelector(
     "#videoAssets"
   );
 
+
 const experience =
   document.querySelector(
     "#experience"
   );
+
 
 const closeButton =
   document.querySelector(
@@ -624,8 +631,22 @@ async function loadContent() {
             currentVideo =
               video;
 
+
             currentPlane =
               videoPlane;
+
+
+            /*
+              Keep the AR plane hidden from
+              the moment the target is detected.
+              The fullscreen video is the only
+              visible video experience.
+            */
+
+            videoPlane.setAttribute(
+              "visible",
+              "false"
+            );
 
 
             try {
@@ -638,6 +659,7 @@ async function loadContent() {
 
               video.currentTime =
                 0;
+
 
               video.muted =
                 false;
@@ -881,6 +903,16 @@ async function startExperience(
 
 
   /*
+    Smooth cinematic zoom
+    on the ACTUAL video element.
+  */
+
+  video.style.transition =
+    "width 3s cubic-bezier(0.22, 1, 0.36, 1), " +
+    "height 3s cubic-bezier(0.22, 1, 0.36, 1)";
+
+
+  /*
     Calculate actual video dimensions.
   */
 
@@ -902,6 +934,7 @@ async function startExperience(
 
   video.style.width =
     "20px";
+
 
   video.style.height =
     "20px";
@@ -943,6 +976,7 @@ async function startExperience(
 
           video.style.width =
             finalWidth;
+
 
           video.style.height =
             finalHeight;
@@ -1023,6 +1057,7 @@ async function closeExperience(
 
     currentVideo.pause();
 
+
     currentVideo.currentTime =
       0;
 
@@ -1044,38 +1079,58 @@ async function closeExperience(
     currentVideo.style.display =
       "";
 
+
     currentVideo.style.position =
       "";
+
 
     currentVideo.style.left =
       "";
 
+
     currentVideo.style.top =
       "";
+
 
     currentVideo.style.width =
       "";
 
+
     currentVideo.style.height =
       "";
+
 
     currentVideo.style.zIndex =
       "";
 
+
     currentVideo.style.pointerEvents =
       "";
+
 
     currentVideo.style.objectFit =
       "";
 
+
     currentVideo.style.background =
+      "";
+
+
+    currentVideo.style.transition =
       "";
 
   }
 
 
   /*
-    Restore AR plane.
+    IMPORTANT:
+
+    Keep the AR video plane hidden
+    after closing.
+
+    Otherwise A-Frame can keep the
+    last rendered video frame visible
+    inside the scanner.
   */
 
   if (
@@ -1084,7 +1139,7 @@ async function closeExperience(
 
     currentPlane.setAttribute(
       "visible",
-      "true"
+      "false"
     );
 
   }
@@ -1104,14 +1159,36 @@ async function closeExperience(
 
 
   /*
+    Reset every AR video plane so
+    no previous video's rendered frame
+    remains in the scanner.
+  */
+
+  scene.querySelectorAll(
+    "[mindar-image-target] a-video"
+  ).forEach(
+    plane => {
+
+      plane.setAttribute(
+        "visible",
+        "false"
+      );
+
+    }
+  );
+
+
+  /*
     Reset state.
   */
 
   experienceActive =
     false;
 
+
   currentVideo =
     null;
+
 
   currentPlane =
     null;
