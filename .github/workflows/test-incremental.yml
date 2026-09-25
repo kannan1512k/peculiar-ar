@@ -1,0 +1,162 @@
+name: Test Incremental Build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-incremental:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Clone MindAR v1.2.5
+        run: |
+          git clone --depth 1 --branch v1.2.5 \
+            https://github.com/hiukim/mind-ar-js.git mindar
+
+      - name: Install canvas build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            libcairo2-dev \
+            libpango1.0-dev \
+            libjpeg-dev \
+            libgif-dev \
+            librsvg2-dev
+
+      - name: Install MindAR dependencies
+        working-directory: mindar
+        run: npm install
+
+      - name: Create incremental test script
+        working-directory: mindar
+        run: |
+          cat > incremental-test.js <<'EOF'
+
+          import { OfflineCompiler } from './src/image-target/offline-compiler.js';
+          import { loadImage } from 'canvas';
+          import { readFile, writeFile } from 'fs/promises';
+          import * as msgpack from '@msgpack/msgpack';
+          import path from 'path';
+
+          async function run() {
+
+            const repoRoot = process.env.GITHUB_WORKSPACE;
+
+            const existingFile =
+              path.join(repoRoot, 'targets.mind');
+
+            const newTarget =
+              path.join(repoRoot, 'targets', 'poster005.jpg');
+
+            const outputFile =
+              path.join(repoRoot, 'targets-incremental-test.mind');
+
+
+            console.log('Loading existing targets.mind...');
+
+            const existingBuffer =
+              await readFile(existingFile);
+
+            const existingData =
+              msgpack.decode(
+                new Uint8Array(existingBuffer)
+              );
+
+            console.log(
+              `Existing targets: ${existingData.dataList.length}`
+            );
+
+
+            console.log('Compiling ONE target only...');
+
+            const image =
+              await loadImage(newTarget);
+
+            const compiler =
+              new OfflineCompiler();
+
+            const start =
+              Date.now();
+
+            await compiler.compileImageTargets(
+              [image],
+              progress => {
+                console.log(
+                  `New target progress: ${progress.toFixed(2)}%`
+                );
+              }
+            );
+
+            const newBuffer =
+              compiler.exportData();
+
+            const newData =
+              msgpack.decode(
+                new Uint8Array(newBuffer)
+              );
+
+            const elapsed =
+              ((Date.now() - start) / 1000).toFixed(2);
+
+            console.log(
+              `ONE target compile time: ${elapsed} seconds`
+            );
+
+
+            console.log('Combining target databases...');
+
+            const combinedDataList = [
+              ...existingData.dataList,
+              ...newData.dataList
+            ];
+
+            const combined =
+              msgpack.encode({
+                v: existingData.v,
+                dataList: combinedDataList
+              });
+
+            await writeFile(
+              outputFile,
+              combined
+            );
+
+            console.log(
+              `Combined targets: ${combinedDataList.length}`
+            );
+
+            console.log(
+              `Created: ${outputFile}`
+            );
+
+          }
+
+          run().catch(error => {
+            console.error(error);
+            process.exit(1);
+          });
+
+          EOF
+
+      - name: Run incremental test
+        working-directory: mindar
+        run: node incremental-test.js
+
+      - name: Verify test file
+        run: |
+          ls -lh targets-incremental-test.mind
