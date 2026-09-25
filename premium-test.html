@@ -23,9 +23,8 @@
       font-family: Arial, Helvetica, sans-serif;
     }
 
-
     /* =====================================
-       PREMIUM INTRO SCREEN
+       PREMIUM INTRO
        ===================================== */
 
     #introScreen {
@@ -57,12 +56,10 @@
       text-align: center;
     }
 
-
     #introScreen::before {
       content: "";
 
       position: absolute;
-
       inset: 14px;
 
       border:
@@ -73,7 +70,6 @@
 
       pointer-events: none;
     }
-
 
     /* =====================================
        LOGO
@@ -104,7 +100,6 @@
         logoAppear 1.2s ease forwards;
     }
 
-
     @keyframes logoAppear {
 
       from {
@@ -118,7 +113,6 @@
       }
 
     }
-
 
     /* =====================================
        BRAND LABEL
@@ -137,7 +131,6 @@
 
       text-transform: uppercase;
     }
-
 
     /* =====================================
        MAIN TITLE
@@ -172,7 +165,6 @@
       color: transparent;
     }
 
-
     /* =====================================
        TAGLINE
        ===================================== */
@@ -190,7 +182,6 @@
 
       text-transform: uppercase;
     }
-
 
     /* =====================================
        DESCRIPTION
@@ -211,9 +202,8 @@
         rgba(255, 255, 255, 0.68);
     }
 
-
     /* =====================================
-       CTA BUTTON
+       CTA
        ===================================== */
 
     #startButton {
@@ -261,7 +251,6 @@
         box-shadow 0.2s ease;
     }
 
-
     #startButton:active {
 
       transform:
@@ -272,14 +261,12 @@
         rgba(255, 194, 50, 0.4);
     }
 
-
     #startButton:disabled {
 
       opacity: 0.55;
 
       cursor: default;
     }
-
 
     /* =====================================
        CAMERA INSTRUCTION
@@ -297,13 +284,11 @@
         rgba(255,255,255,0.48);
     }
 
-
     #scanHint span {
 
       color:
         #e8b83d;
     }
-
 
     /* =====================================
        LOADING
@@ -332,7 +317,6 @@
       display: none;
     }
 
-
     .loaderDot {
 
       display: inline-block;
@@ -353,7 +337,6 @@
         ease-in-out;
     }
 
-
     @keyframes pulse {
 
       0%, 100% {
@@ -368,7 +351,6 @@
 
     }
 
-
     /* =====================================
        INTRO EXIT
        ===================================== */
@@ -381,7 +363,6 @@
         ease
         forwards;
     }
-
 
     @keyframes introExit {
 
@@ -397,9 +378,8 @@
 
     }
 
-
     /* =====================================
-       VIDEO EXPERIENCE OVERLAY
+       VIDEO EXPERIENCE
        ===================================== */
 
     #videoExperience {
@@ -424,22 +404,19 @@
       overflow: hidden;
     }
 
-
     /*
-      This is the video itself.
-
-      It starts small and grows smoothly
-      into the screen while preserving
-      the video's original aspect ratio.
+      IMPORTANT:
+      Video starts playing immediately
+      while the container smoothly grows.
     */
 
     #experienceVideo {
 
       display: block;
 
-      width: 35vw;
+      width: 34vw;
 
-      height: 35vh;
+      height: 34vh;
 
       object-fit: contain;
 
@@ -447,27 +424,39 @@
 
       border-radius: 18px;
 
-      opacity: 0;
+      opacity: 1;
 
       transform:
-        scale(0.65);
+        scale(0.72);
+
+      transform-origin: center center;
 
       box-shadow:
-        0 0 0 rgba(255, 194, 50, 0);
+        0 0 0
+        rgba(255, 194, 50, 0);
+
+      /*
+        Slow cinematic reveal
+      */
 
       transition:
-        width 0.9s cubic-bezier(0.22, 1, 0.36, 1),
-        height 0.9s cubic-bezier(0.22, 1, 0.36, 1),
-        transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
-        opacity 0.35s ease,
-        border-radius 0.7s ease,
-        box-shadow 0.9s ease;
+        width 2.2s
+        cubic-bezier(0.22, 1, 0.36, 1),
+
+        height 2.2s
+        cubic-bezier(0.22, 1, 0.36, 1),
+
+        transform 2.2s
+        cubic-bezier(0.22, 1, 0.36, 1),
+
+        border-radius 1.8s ease,
+
+        box-shadow 2.2s ease;
     }
 
-
-    /*
-      Reveal state
-    */
+    /* =====================================
+       REVEAL STATE
+       ===================================== */
 
     #videoExperience.reveal {
 
@@ -477,9 +466,8 @@
       pointer-events: auto;
 
       transition:
-        background 0.8s ease;
+        background 0.9s ease;
     }
-
 
     #videoExperience.reveal
     #experienceVideo {
@@ -500,41 +488,8 @@
         rgba(255, 194, 50, 0.08);
     }
 
-
     /* =====================================
-       GOLD REVEAL FRAME
-       ===================================== */
-
-    #revealFrame {
-
-      position: absolute;
-
-      inset: 20px;
-
-      border:
-        1px solid
-        rgba(255, 204, 80, 0.5);
-
-      border-radius: 18px;
-
-      opacity: 0;
-
-      pointer-events: none;
-
-      transition:
-        opacity 0.45s ease;
-    }
-
-
-    #videoExperience.reveal
-    #revealFrame {
-
-      opacity: 0;
-    }
-
-
-    /* =====================================
-       VIDEO CLOSE BUTTON
+       CLOSE BUTTON
        ===================================== */
 
     #closeVideo {
@@ -575,13 +530,11 @@
       pointer-events: auto;
     }
 
-
     #videoExperience.reveal
     #closeVideo {
 
       display: flex;
     }
-
 
   </style>
 </head>
@@ -596,28 +549,23 @@
 
   <div id="introScreen">
 
-
     <img
       id="brandLogo"
       src="./logo.png"
       alt="Peculiar Print Hub"
     >
 
-
     <div id="experienceLabel">
       PECULIAR PRINT HUB
     </div>
-
 
     <h1 id="mainTitle">
       BRING IT TO LIFE
     </h1>
 
-
     <div id="tagline">
       ONE PRINT. A WHOLE NEW EXPERIENCE.
     </div>
-
 
     <p id="description">
       Your printed poster has more to reveal.
@@ -625,14 +573,12 @@
       your print come alive.
     </p>
 
-
     <button
       id="startButton"
       disabled
     >
       UNVEIL ✦
     </button>
-
 
     <div id="scanHint">
 
@@ -661,12 +607,10 @@
 
 
   <!-- =====================================
-       FULL-SCREEN VIDEO EXPERIENCE
+       VIDEO EXPERIENCE
        ===================================== -->
 
   <div id="videoExperience">
-
-    <div id="revealFrame"></div>
 
     <video
       id="experienceVideo"
@@ -698,18 +642,15 @@
     device-orientation-permission-ui="enabled: false"
   >
 
-
     <a-assets
       id="videoAssets">
     </a-assets>
-
 
     <a-camera
       position="0 0 0"
       look-controls="enabled: false"
     >
     </a-camera>
-
 
   </a-scene>
 
@@ -786,7 +727,6 @@ async function loadContent() {
 
   try {
 
-
     loadingText.style.display =
       "block";
 
@@ -823,7 +763,7 @@ async function loadContent() {
 
 
     /* =================================
-       CREATE ALL VIDEOS + TARGETS
+       CREATE VIDEOS + TARGETS
        ================================= */
 
     data.posters.forEach(
@@ -834,8 +774,6 @@ async function loadContent() {
           "video_" +
           poster.id;
 
-
-        /* CREATE AR VIDEO */
 
         const video =
           document.createElement(
@@ -880,8 +818,6 @@ async function loadContent() {
         );
 
 
-        /* CREATE TARGET */
-
         const target =
           document.createElement(
             "a-entity"
@@ -895,8 +831,6 @@ async function loadContent() {
           poster.targetIndex
         );
 
-
-        /* CREATE AR VIDEO PLANE */
 
         const videoPlane =
           document.createElement(
@@ -960,12 +894,6 @@ async function loadContent() {
           async () => {
 
 
-            /*
-             * If another video experience
-             * is already active, don't
-             * interrupt it.
-             */
-
             if (
               experienceActive
             ) {
@@ -984,16 +912,10 @@ async function loadContent() {
             );
 
 
-            /*
-             * Start the fixed video
-             * experience.
-             */
-
             startVideoExperience(
               poster,
               video
             );
-
 
           }
         );
@@ -1010,15 +932,8 @@ async function loadContent() {
 
 
             /*
-             * IMPORTANT:
-             *
-             * We intentionally DO NOT
-             * pause the video here.
-             *
-             * Once the reveal starts,
-             * the video should continue
-             * even after the poster leaves
-             * the camera.
+             * Once the reveal has started,
+             * the video must continue.
              */
 
             if (
@@ -1081,25 +996,21 @@ async function loadContent() {
 
 
 /* =====================================
-   STOP OTHER AR VIDEOS
+   STOP OTHER VIDEOS
    ===================================== */
 
 function stopOtherVideos(
   currentVideo
 ) {
 
-
   videos.forEach(
     video => {
-
 
       if (
         video !== currentVideo
       ) {
 
-
         video.pause();
-
 
         video.currentTime =
           0;
@@ -1143,8 +1054,8 @@ async function startVideoExperience(
 
 
   /*
-   * Use the same video file
-   * inside our full-screen layer.
+   * Connect the same video file
+   * to the presentation video.
    */
 
   experienceVideo.src =
@@ -1167,7 +1078,7 @@ async function startVideoExperience(
 
 
   /*
-   * Reset position.
+   * Start from beginning.
    */
 
   experienceVideo.currentTime =
@@ -1175,7 +1086,7 @@ async function startVideoExperience(
 
 
   /*
-   * Show small reveal stage.
+   * Show the video immediately.
    */
 
   videoExperience.style.display =
@@ -1188,16 +1099,20 @@ async function startVideoExperience(
 
 
   /*
-   * Force browser to register
-   * the initial state before
-   * animation.
+   * Make browser apply
+   * initial animation state.
    */
 
   void experienceVideo.offsetWidth;
 
 
   /*
-   * Play the video.
+   * IMPORTANT:
+   *
+   * Start video BEFORE reveal.
+   *
+   * This prevents the first frame
+   * from appearing frozen.
    */
 
   try {
@@ -1207,7 +1122,7 @@ async function startVideoExperience(
   } catch (error) {
 
     console.log(
-      "Full-screen video play blocked:",
+      "Video play blocked:",
       error
     );
 
@@ -1215,7 +1130,8 @@ async function startVideoExperience(
 
 
   /*
-   * Start zoom/reveal animation.
+   * Start the slow cinematic zoom
+   * while video is already playing.
    */
 
   requestAnimationFrame(
@@ -1238,7 +1154,7 @@ async function startVideoExperience(
 
 
 /* =====================================
-   CLOSE VIDEO
+   CLOSE BUTTON
    ===================================== */
 
 closeVideo.addEventListener(
