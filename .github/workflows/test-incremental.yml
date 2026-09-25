@@ -61,7 +61,7 @@ jobs:
               path.join(repoRoot, 'targets.mind');
 
             const newTarget =
-              path.join(repoRoot, 'targets', 'poster005.jpg');
+              path.join(repoRoot, 'test-targets', 'poster006.jpg');
 
             const outputFile =
               path.join(repoRoot, 'targets-incremental-test.mind');
