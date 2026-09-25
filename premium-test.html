@@ -1,581 +1,662 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
-  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-
-  <style>
-
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    html,
-    body {
-      margin: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #000;
-      font-family: Arial, Helvetica, sans-serif;
-    }
-
-    /* =====================================
-       PREMIUM INTRO
-       ===================================== */
-
-    #introScreen {
-      position: fixed;
-      inset: 0;
-      z-index: 99999;
-
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-
-      padding: 30px;
-
-      background:
-        radial-gradient(
-          circle at 50% 32%,
-          rgba(255, 193, 7, 0.14),
-          transparent 34%
-        ),
-        linear-gradient(
-          145deg,
-          #000000 0%,
-          #080808 55%,
-          #15110a 100%
-        );
-
-      color: #fff;
-      text-align: center;
-    }
-
-    #introScreen::before {
-      content: "";
-
-      position: absolute;
-      inset: 14px;
-
-      border:
-        1px solid
-        rgba(255, 196, 60, 0.22);
-
-      border-radius: 22px;
-
-      pointer-events: none;
-    }
-
-    #brandLogo {
-      width: min(78vw, 360px);
-      max-height: 210px;
-      object-fit: contain;
-
-      margin-bottom: 22px;
-
-      filter:
-        drop-shadow(
-          0 0 12px
-          rgba(255, 190, 40, 0.28)
-        )
-        drop-shadow(
-          0 0 30px
-          rgba(255, 180, 20, 0.12)
-        );
-
-      animation:
-        logoAppear 1.2s ease forwards;
-    }
-
-    @keyframes logoAppear {
-      from {
-        opacity: 0;
-        transform: scale(0.88);
-      }
 
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
+<meta name="viewport"
+      content="width=device-width,
+               initial-scale=1.0,
+               maximum-scale=1.0,
+               user-scalable=no">
 
-    #experienceLabel {
-      font-size: 11px;
-      letter-spacing: 4px;
-      color: rgba(255, 215, 120, 0.8);
-      margin-bottom: 12px;
-      text-transform: uppercase;
-    }
+<script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
-    #mainTitle {
-      margin: 0;
+<style>
 
-      font-size:
-        clamp(27px, 8vw, 44px);
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
 
-      line-height: 1.08;
-      font-weight: 700;
-      letter-spacing: 1px;
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  font-family: Arial, Helvetica, sans-serif;
+}
 
-      background:
-        linear-gradient(
-          90deg,
-          #fff4c7,
-          #ffd34d,
-          #ffffff,
-          #d99b20
-        );
+/* =====================================================
+   PREMIUM INTRO
+   ===================================================== */
 
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
+#introScreen {
 
-    #tagline {
-      margin-top: 9px;
+  position: fixed;
+  inset: 0;
 
-      font-size: 13px;
+  z-index: 99999;
 
-      letter-spacing: 1.5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 
-      color:
-        rgba(255, 215, 130, 0.72);
+  padding: 30px;
 
-      text-transform: uppercase;
-    }
+  background:
+    radial-gradient(
+      circle at 50% 32%,
+      rgba(255,193,7,0.14),
+      transparent 34%
+    ),
+    linear-gradient(
+      145deg,
+      #000000 0%,
+      #080808 55%,
+      #15110a 100%
+    );
 
-    #description {
-      max-width: 340px;
+  color: #fff;
+  text-align: center;
 
-      margin:
-        16px 0 28px;
+  transition:
+    opacity 0.55s ease,
+    transform 0.55s ease;
+}
 
-      font-size: 14px;
+#introScreen::before {
 
-      line-height: 1.65;
+  content: "";
 
-      color:
-        rgba(255, 255, 255, 0.68);
-    }
+  position: absolute;
+  inset: 14px;
 
-    #startButton {
-      position: relative;
+  border:
+    1px solid
+    rgba(255,196,60,0.22);
 
-      min-width: 225px;
+  border-radius: 22px;
 
-      padding:
-        17px 30px;
+  pointer-events: none;
+}
 
-      border:
-        1px solid
-        rgba(255, 220, 120, 0.75);
+#introScreen.hide {
 
-      border-radius: 999px;
+  opacity: 0;
+  transform: scale(1.03);
 
-      background:
-        linear-gradient(
-          135deg,
-          #fff1a8,
-          #d99b20 45%,
-          #ffe47a
-        );
+  pointer-events: none;
+}
 
-      color: #080808;
+#brandLogo {
 
-      font-size: 15px;
+  width: min(78vw,360px);
+  max-height: 210px;
 
-      font-weight: 800;
+  object-fit: contain;
 
-      letter-spacing: 2.5px;
+  margin-bottom: 22px;
 
-      cursor: pointer;
+  filter:
+    drop-shadow(
+      0 0 12px
+      rgba(255,190,40,0.28)
+    )
+    drop-shadow(
+      0 0 30px
+      rgba(255,180,20,0.12)
+    );
 
-      box-shadow:
-        0 0 18px
-        rgba(255, 194, 50, 0.25),
+  animation:
+    logoAppear 1.2s ease forwards;
+}
 
-        inset 0 1px 1px
-        rgba(255,255,255,0.8);
+@keyframes logoAppear {
 
-      transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
-    }
+  from {
+    opacity: 0;
+    transform: scale(0.88);
+  }
 
-    #startButton:active {
-      transform: scale(0.96);
-    }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 
-    #startButton:disabled {
-      opacity: 0.55;
-      cursor: default;
-    }
+}
 
-    #scanHint {
-      margin-top: 22px;
+#experienceLabel {
 
-      font-size: 12px;
+  font-size: 11px;
 
-      line-height: 1.5;
+  letter-spacing: 4px;
 
-      color:
-        rgba(255,255,255,0.48);
-    }
+  color:
+    rgba(255,215,120,0.8);
 
-    #scanHint span {
-      color: #e8b83d;
-    }
+  margin-bottom: 12px;
 
-    #loadingText {
-      position: fixed;
+  text-transform: uppercase;
+}
 
-      z-index: 100000;
+#mainTitle {
 
-      left: 50%;
+  margin: 0;
 
-      bottom: 34px;
+  font-size:
+    clamp(27px,8vw,44px);
 
-      transform:
-        translateX(-50%);
+  line-height: 1.08;
 
-      color:
-        rgba(255,255,255,0.6);
+  font-weight: 700;
 
-      font-size: 12px;
+  letter-spacing: 1px;
 
-      letter-spacing: 1px;
+  background:
+    linear-gradient(
+      90deg,
+      #fff4c7,
+      #ffd34d,
+      #ffffff,
+      #d99b20
+    );
 
-      display: none;
-    }
+  -webkit-background-clip: text;
+  background-clip: text;
 
-    .loaderDot {
-      display: inline-block;
+  color: transparent;
+}
 
-      width: 5px;
-      height: 5px;
+#tagline {
 
-      margin-left: 4px;
+  margin-top: 9px;
 
-      border-radius: 50%;
+  font-size: 13px;
 
-      background: #e8b83d;
+  letter-spacing: 1.5px;
 
-      animation:
-        pulse 1.2s
-        infinite
-        ease-in-out;
-    }
+  color:
+    rgba(255,215,130,0.72);
 
-    @keyframes pulse {
-      0%, 100% {
-        opacity: 0.25;
-        transform: scale(0.7);
-      }
+  text-transform: uppercase;
+}
 
-      50% {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
+#description {
 
-    #introScreen.hide {
-      animation:
-        introExit
-        0.55s
-        ease
-        forwards;
-    }
+  max-width: 340px;
 
-    @keyframes introExit {
-      to {
-        opacity: 0;
-        transform: scale(1.03);
-        pointer-events: none;
-      }
-    }
+  margin:
+    16px 0 28px;
 
-    /* =====================================
-       VIDEO EXPERIENCE
-       IMPORTANT:
-       HIDDEN UNTIL TARGET IS FOUND
-       ===================================== */
+  font-size: 14px;
 
-    #videoExperience {
+  line-height: 1.65;
 
-      position: fixed;
+  color:
+    rgba(255,255,255,0.68);
+}
 
-      inset: 0;
+#startButton {
 
-      z-index: 90000;
+  position: relative;
 
-      display: none;
+  min-width: 225px;
 
-      align-items: center;
+  padding:
+    17px 30px;
 
-      justify-content: center;
+  border:
+    1px solid
+    rgba(255,220,120,0.75);
 
-      background:
-        rgba(0, 0, 0, 0);
+  border-radius: 999px;
 
-      opacity: 0;
+  background:
+    linear-gradient(
+      135deg,
+      #fff1a8,
+      #d99b20 45%,
+      #ffe47a
+    );
 
-      pointer-events: none;
+  color: #080808;
 
-      overflow: hidden;
+  font-size: 15px;
 
-      transition:
-        opacity 0.35s ease,
-        background 0.8s ease;
-    }
+  font-weight: 800;
 
-    /*
-      Video starts small.
-      It is NOT visible during scanning.
-    */
+  letter-spacing: 2.5px;
 
-    #experienceVideo {
+  cursor: pointer;
 
-      display: block;
+  box-shadow:
+    0 0 18px
+    rgba(255,194,50,0.25),
 
-      width: 32vw;
+    inset 0 1px 1px
+    rgba(255,255,255,0.8);
 
-      height: 32vh;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
 
-      object-fit: contain;
+#startButton:active {
+  transform: scale(0.96);
+}
 
-      background: #000;
+#startButton:disabled {
 
-      border-radius: 18px;
+  opacity: 0.55;
 
-      opacity: 1;
+  cursor: default;
+}
 
-      transform: scale(0.70);
+#scanHint {
 
-      transform-origin: center center;
+  margin-top: 22px;
 
-      transition:
-        width 2.2s
-        cubic-bezier(0.22, 1, 0.36, 1),
+  font-size: 12px;
 
-        height 2.2s
-        cubic-bezier(0.22, 1, 0.36, 1),
+  line-height: 1.5;
 
-        transform 2.2s
-        cubic-bezier(0.22, 1, 0.36, 1),
+  color:
+    rgba(255,255,255,0.48);
+}
 
-        border-radius 1.8s ease;
-    }
+#scanHint span {
+  color: #e8b83d;
+}
 
-    /*
-      Reveal starts ONLY after targetFound.
-    */
 
-    #videoExperience.reveal {
+/* =====================================================
+   CUSTOM AR STARTING STATUS
+   ===================================================== */
 
-      opacity: 1;
+#arStatus {
 
-      background:
-        rgba(0, 0, 0, 0.94);
+  position: fixed;
 
-      pointer-events: auto;
-    }
+  inset: 0;
 
-    #videoExperience.reveal
-    #experienceVideo {
+  z-index: 5000;
 
-      width: 100vw;
+  display: none;
 
-      height: 100vh;
+  align-items: center;
+  justify-content: center;
 
-      transform: scale(1);
+  pointer-events: none;
+}
 
-      border-radius: 0;
-    }
+#arStatusBox {
 
-    /* =====================================
-       CLOSE BUTTON
-       ===================================== */
+  padding:
+    10px 18px;
 
-    #closeVideo {
+  border-radius: 30px;
 
-      position: fixed;
+  background:
+    rgba(0,0,0,0.45);
 
-      top: 22px;
+  border:
+    1px solid
+    rgba(255,215,120,0.25);
 
-      right: 22px;
+  color:
+    rgba(255,255,255,0.7);
 
-      z-index: 90010;
+  font-size: 11px;
 
-      width: 42px;
+  letter-spacing: 1px;
 
-      height: 42px;
+  backdrop-filter: blur(8px);
+}
 
-      border:
-        1px solid
-        rgba(255,255,255,0.35);
 
-      border-radius: 50%;
+/* =====================================================
+   VIDEO EXPERIENCE
+   ===================================================== */
 
-      background:
-        rgba(0,0,0,0.55);
+#videoExperience {
 
-      color: #fff;
+  position: fixed;
 
-      font-size: 20px;
+  inset: 0;
 
-      display: none;
+  z-index: 90000;
 
-      align-items: center;
+  display: none;
 
-      justify-content: center;
+  align-items: center;
 
-      cursor: pointer;
+  justify-content: center;
 
-      pointer-events: auto;
-    }
+  background:
+    rgba(0,0,0,0);
 
-    #videoExperience.reveal
-    #closeVideo {
-      display: flex;
-    }
+  opacity: 0;
 
-  </style>
+  pointer-events: none;
+
+  overflow: hidden;
+
+  transition:
+    opacity 0.45s ease,
+    background 0.8s ease;
+}
+
+
+/*
+   IMPORTANT:
+
+   The video always has its FINAL viewport dimensions.
+   We animate only transform scale.
+
+   This avoids width/height layout animation
+   and gives a much smoother mobile reveal.
+*/
+
+#experienceVideo {
+
+  display: block;
+
+  width: 100vw;
+
+  height: 100vh;
+
+  object-fit: contain;
+
+  background: #000;
+
+  border-radius: 18px;
+
+  opacity: 1;
+
+  transform:
+    scale(0.22);
+
+  transform-origin:
+    center center;
+
+  will-change:
+    transform;
+
+  transition:
+    transform
+    2.2s
+    cubic-bezier(
+      0.22,
+      1,
+      0.36,
+      1
+    ),
+
+    border-radius
+    1.8s
+    ease;
+}
+
+
+/*
+   Reveal
+*/
+
+#videoExperience.reveal {
+
+  opacity: 1;
+
+  background:
+    rgba(0,0,0,0.94);
+
+  pointer-events: auto;
+}
+
+#videoExperience.reveal
+#experienceVideo {
+
+  transform:
+    scale(1);
+
+  border-radius: 0;
+}
+
+
+/* =====================================================
+   CLOSE BUTTON
+   ===================================================== */
+
+#closeVideo {
+
+  position: fixed;
+
+  top: 22px;
+  right: 22px;
+
+  z-index: 90010;
+
+  width: 42px;
+  height: 42px;
+
+  border:
+    1px solid
+    rgba(255,255,255,0.35);
+
+  border-radius: 50%;
+
+  background:
+    rgba(0,0,0,0.55);
+
+  color: #fff;
+
+  font-size: 20px;
+
+  display: none;
+
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  pointer-events: auto;
+}
+
+#videoExperience.reveal
+#closeVideo {
+
+  display: flex;
+}
+
+
+/* =====================================================
+   A-FRAME
+   ===================================================== */
+
+a-scene {
+
+  position: fixed !important;
+
+  inset: 0 !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+}
+
+canvas.a-canvas {
+
+  position: fixed !important;
+
+  inset: 0 !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+}
+
+video.mindar-video {
+
+  position: fixed !important;
+
+  inset: 0 !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  object-fit: cover !important;
+}
+
+</style>
+
 </head>
 
 
 <body>
 
 
-  <!-- =====================================
-       PREMIUM OPENING
-       ===================================== -->
+<!-- =====================================================
+     PREMIUM INTRO
+     ===================================================== -->
 
-  <div id="introScreen">
+<div id="introScreen">
 
-    <img
-      id="brandLogo"
-      src="./logo.png"
-      alt="Peculiar Print Hub"
-    >
-
-    <div id="experienceLabel">
-      PECULIAR PRINT HUB
-    </div>
-
-    <h1 id="mainTitle">
-      BRING IT TO LIFE
-    </h1>
-
-    <div id="tagline">
-      ONE PRINT. A WHOLE NEW EXPERIENCE.
-    </div>
-
-    <p id="description">
-      Your printed poster has more to reveal.
-      Point your camera at the poster and watch
-      your print come alive.
-    </p>
-
-    <button
-      id="startButton"
-      disabled
-    >
-      UNVEIL ✦
-    </button>
-
-    <div id="scanHint">
-
-      <span>✦</span>
-
-      Allow camera access when prompted
-
-      <span>✦</span>
-
-    </div>
-
-  </div>
-
-
-  <!-- =====================================
-       LOADING
-       ===================================== -->
-
-  <div id="loadingText">
-
-    Preparing your AR experience
-
-    <span class="loaderDot"></span>
-
-  </div>
-
-
-  <!-- =====================================
-       VIDEO EXPERIENCE
-       ===================================== -->
-
-  <div id="videoExperience">
-
-    <video
-      id="experienceVideo"
-      playsinline
-      webkit-playsinline
-      crossorigin="anonymous"
-    ></video>
-
-    <button
-      id="closeVideo"
-      aria-label="Close video"
-    >
-      ×
-    </button>
-
-  </div>
-
-
-  <!-- =====================================
-       AR ENGINE
-       ===================================== -->
-
-  <a-scene
-    mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;"
-    color-space="sRGB"
-    renderer="colorManagement: true"
-    vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: false"
+  <img
+    id="brandLogo"
+    src="./logo.png"
+    alt="Peculiar Print Hub"
   >
 
-    <a-assets
-      id="videoAssets">
-    </a-assets>
+  <div id="experienceLabel">
+    PECULIAR PRINT HUB
+  </div>
 
-    <a-camera
-      position="0 0 0"
-      look-controls="enabled: false"
-    ></a-camera>
+  <h1 id="mainTitle">
+    BRING IT TO LIFE
+  </h1>
 
-  </a-scene>
+  <div id="tagline">
+    ONE PRINT. A WHOLE NEW EXPERIENCE.
+  </div>
+
+  <p id="description">
+
+    Your printed poster has more to reveal.
+    Point your camera at the poster and watch
+    your print come alive.
+
+  </p>
+
+  <button
+    id="startButton"
+    disabled
+  >
+    LOADING...
+  </button>
+
+  <div id="scanHint">
+
+    <span>✦</span>
+
+    Allow camera access when prompted
+
+    <span>✦</span>
+
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     AR STATUS
+     ===================================================== -->
+
+<div id="arStatus">
+
+  <div id="arStatusBox">
+    STARTING CAMERA...
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     VIDEO EXPERIENCE
+     ===================================================== -->
+
+<div id="videoExperience">
+
+  <video
+    id="experienceVideo"
+    playsinline
+    webkit-playsinline
+    preload="auto"
+    crossorigin="anonymous"
+  ></video>
+
+  <button
+    id="closeVideo"
+    aria-label="Close video"
+  >
+    ×
+  </button>
+
+</div>
+
+
+<!-- =====================================================
+     AR ENGINE
+     ===================================================== -->
+
+<a-scene
+
+  mindar-image="
+    imageTargetSrc: ./targets.mind;
+    autoStart: false;
+    uiLoading: no;
+    uiError: no;
+    uiScanning: no;
+  "
+
+  color-space="sRGB"
+
+  renderer="
+    colorManagement: true;
+    antialias: true;
+  "
+
+  vr-mode-ui="enabled: false"
+
+  device-orientation-permission-ui="enabled: false"
+
+>
+
+  <a-assets
+    id="videoAssets"
+    timeout="10000"
+  ></a-assets>
+
+  <a-camera
+    position="0 0 0"
+    look-controls="enabled: false"
+  ></a-camera>
+
+</a-scene>
 
 
 <script>
 
-
-/* =====================================
+/* =====================================================
    ELEMENTS
-   ===================================== */
+   ===================================================== */
 
 const introScreen =
   document.querySelector("#introScreen");
 
 const startButton =
   document.querySelector("#startButton");
-
-const loadingText =
-  document.querySelector("#loadingText");
 
 const scene =
   document.querySelector("a-scene");
@@ -592,6 +673,13 @@ const experienceVideo =
 const closeVideo =
   document.querySelector("#closeVideo");
 
+const arStatus =
+  document.querySelector("#arStatus");
+
+
+/* =====================================================
+   STATE
+   ===================================================== */
 
 let videos = [];
 
@@ -600,41 +688,49 @@ let targetsReady = false;
 let experienceActive = false;
 
 
-/* =====================================
+/* =====================================================
    LOAD CONTENT
-   ===================================== */
+   ===================================================== */
 
 async function loadContent() {
 
   try {
 
-    loadingText.style.display = "block";
-
     const response =
-      await fetch("./content.json");
+      await fetch(
+        "./content.json",
+        {
+          cache: "no-store"
+        }
+      );
 
     if (!response.ok) {
+
       throw new Error(
         "Could not load content.json"
       );
+
     }
 
     const data =
       await response.json();
 
+
     if (
       !data.posters ||
       data.posters.length === 0
     ) {
+
       throw new Error(
-        "No posters found in content.json"
+        "No posters found"
       );
+
     }
 
 
-    /* =================================
-       CREATE ALL TARGETS
-       ================================= */
+    /*
+      Create all target entities.
+    */
 
     data.posters.forEach(
       poster => {
@@ -643,36 +739,54 @@ async function loadContent() {
           "video_" + poster.id;
 
 
-        /* CREATE VIDEO */
+        /* -----------------------------------------
+           VIDEO ASSET
+           ----------------------------------------- */
 
         const video =
-          document.createElement("video");
+          document.createElement(
+            "video"
+          );
 
-        video.id = videoId;
+        video.id =
+          videoId;
 
         video.src =
           "./" + poster.video;
 
         video.loop = true;
 
-        video.crossOrigin = "anonymous";
+        video.preload =
+          "metadata";
 
-        video.playsInline = true;
+        video.playsInline =
+          true;
+
+        video.crossOrigin =
+          "anonymous";
 
         video.setAttribute(
           "webkit-playsinline",
           ""
         );
 
-        videoAssets.appendChild(video);
+        videoAssets.appendChild(
+          video
+        );
 
-        videos.push(video);
+        videos.push(
+          video
+        );
 
 
-        /* CREATE TARGET */
+        /* -----------------------------------------
+           TARGET ENTITY
+           ----------------------------------------- */
 
         const target =
-          document.createElement("a-entity");
+          document.createElement(
+            "a-entity"
+          );
 
         target.setAttribute(
           "mindar-image-target",
@@ -681,44 +795,31 @@ async function loadContent() {
         );
 
 
-        /* CREATE AR VIDEO PLANE */
+        /*
+          We do NOT put the video on the
+          AR plane anymore.
 
-        const videoPlane =
-          document.createElement("a-video");
+          Why?
 
-        videoPlane.setAttribute(
-          "src",
-          "#" + videoId
+          The final experience is our own
+          fullscreen video overlay.
+
+          MindAR only needs the target entity
+          for detection/tracking.
+
+          This reduces unnecessary rendering
+          and makes the camera experience cleaner.
+        */
+
+
+        scene.appendChild(
+          target
         );
 
-        videoPlane.setAttribute(
-          "position",
-          "0 0 0"
-        );
 
-        videoPlane.setAttribute(
-          "width",
-          "1"
-        );
-
-        videoPlane.setAttribute(
-          "height",
-          "1"
-        );
-
-        videoPlane.setAttribute(
-          "material",
-          "shader: flat"
-        );
-
-        target.appendChild(videoPlane);
-
-        scene.appendChild(target);
-
-
-        /* =================================
+        /* -----------------------------------------
            TARGET FOUND
-           ================================= */
+           ----------------------------------------- */
 
         target.addEventListener(
           "targetFound",
@@ -728,10 +829,11 @@ async function loadContent() {
               return;
             }
 
-            stopOtherVideos(video);
+            stopOtherVideos(
+              video
+            );
 
             await startVideoExperience(
-              poster,
               video
             );
 
@@ -739,25 +841,25 @@ async function loadContent() {
         );
 
 
-        /* =================================
+        /* -----------------------------------------
            TARGET LOST
-           ================================= */
+           ----------------------------------------- */
 
         target.addEventListener(
           "targetLost",
           () => {
 
             /*
-             * Before the reveal:
-             * pause the AR video.
-             *
-             * After the reveal:
-             * the separate full-screen
-             * video continues playing.
-             */
+              Once the fullscreen experience
+              has started, keep playing.
+
+              Before that, pause the source.
+            */
 
             if (!experienceActive) {
+
               video.pause();
+
             }
 
           }
@@ -767,11 +869,11 @@ async function loadContent() {
     );
 
 
-    targetsReady = true;
+    targetsReady =
+      true;
 
-    loadingText.style.display = "none";
-
-    startButton.disabled = false;
+    startButton.disabled =
+      false;
 
     startButton.textContent =
       "UNVEIL ✦";
@@ -783,84 +885,99 @@ async function loadContent() {
       "posters"
     );
 
-  } catch (error) {
+  }
+
+  catch (error) {
 
     console.error(
-      "Content database error:",
+      "Content loading error:",
       error
     );
 
-    loadingText.textContent =
-      "Failed to load AR content.";
+    startButton.textContent =
+      "ERROR";
 
-    startButton.disabled = true;
+    startButton.disabled =
+      true;
 
   }
 
 }
 
 
-/* =====================================
+/* =====================================================
    STOP OTHER VIDEOS
-   ===================================== */
+   ===================================================== */
 
-function stopOtherVideos(currentVideo) {
+function stopOtherVideos(
+  currentVideo
+) {
 
-  videos.forEach(video => {
+  videos.forEach(
+    video => {
 
-    if (video !== currentVideo) {
+      if (
+        video !== currentVideo
+      ) {
 
-      video.pause();
+        video.pause();
 
-      video.currentTime = 0;
+        try {
+
+          video.currentTime = 0;
+
+        } catch(e) {}
+
+      }
 
     }
-
-  });
+  );
 
 }
 
 
-/* =====================================
+/* =====================================================
    START VIDEO EXPERIENCE
-   ===================================== */
+   ===================================================== */
 
 async function startVideoExperience(
-  poster,
   sourceVideo
 ) {
 
-  if (experienceActive) {
+  if (
+    experienceActive
+  ) {
+
     return;
+
   }
 
 
-  /*
-   * Mark the experience active.
-   */
-
-  experienceActive = true;
+  experienceActive =
+    true;
 
 
   /*
-   * Stop AR plane video.
-   */
+    Stop the AR source video.
+  */
 
   sourceVideo.pause();
 
 
   /*
-   * Use the same video source.
-   */
+    Use the same video file.
+  */
 
   experienceVideo.src =
     sourceVideo.currentSrc ||
     sourceVideo.src;
 
 
-  experienceVideo.loop = true;
+  experienceVideo.loop =
+    true;
 
-  experienceVideo.playsInline = true;
+  experienceVideo.playsInline =
+    true;
 
   experienceVideo.setAttribute(
     "webkit-playsinline",
@@ -868,15 +985,21 @@ async function startVideoExperience(
   );
 
 
-  experienceVideo.currentTime = 0;
+  /*
+    Start from beginning.
+  */
+
+  try {
+
+    experienceVideo.currentTime =
+      0;
+
+  } catch(e) {}
 
 
   /*
-   * IMPORTANT:
-   *
-   * Keep overlay completely invisible
-   * while camera is still being used.
-   */
+    Reset reveal state.
+  */
 
   videoExperience.classList.remove(
     "reveal"
@@ -890,24 +1013,35 @@ async function startVideoExperience(
 
 
   /*
-   * Force initial state.
-   */
+    Force initial transform state.
+  */
+
+  experienceVideo.style.transform =
+    "scale(0.22)";
+
 
   void experienceVideo.offsetWidth;
 
 
   /*
-   * Start video FIRST.
-   */
+    IMPORTANT:
+
+    Start the video BEFORE the reveal.
+
+    This prevents the "frozen first frame"
+    effect as much as possible.
+  */
 
   try {
 
     await experienceVideo.play();
 
-  } catch (error) {
+  }
+
+  catch(error) {
 
     console.log(
-      "Video play blocked:",
+      "Video autoplay/play blocked:",
       error
     );
 
@@ -915,31 +1049,30 @@ async function startVideoExperience(
 
 
   /*
-   * Give the video a tiny moment
-   * to start moving.
-   */
+    Give the browser a tiny moment
+    to actually start decoding frames.
+  */
 
-  setTimeout(() => {
+  setTimeout(
+    () => {
 
-    /*
-     * Now reveal the overlay.
-     */
+      videoExperience.style.opacity =
+        "1";
 
-    videoExperience.style.opacity =
-      "1";
+      videoExperience.classList.add(
+        "reveal"
+      );
 
-    videoExperience.classList.add(
-      "reveal"
-    );
-
-  }, 120);
+    },
+    120
+  );
 
 }
 
 
-/* =====================================
+/* =====================================================
    CLOSE VIDEO
-   ===================================== */
+   ===================================================== */
 
 closeVideo.addEventListener(
   "click",
@@ -951,9 +1084,9 @@ closeVideo.addEventListener(
 );
 
 
-/* =====================================
+/* =====================================================
    CLOSE EXPERIENCE
-   ===================================== */
+   ===================================================== */
 
 function closeVideoExperience() {
 
@@ -965,6 +1098,7 @@ function closeVideoExperience() {
 
   experienceVideo.load();
 
+
   videoExperience.classList.remove(
     "reveal"
   );
@@ -975,25 +1109,73 @@ function closeVideoExperience() {
   videoExperience.style.display =
     "none";
 
-  experienceActive = false;
+
+  experienceActive =
+    false;
 
 }
 
 
-/* =====================================
+/* =====================================================
+   AR READY
+   ===================================================== */
+
+scene.addEventListener(
+  "arReady",
+  () => {
+
+    console.log(
+      "MindAR ready - camera should be live"
+    );
+
+    arStatus.style.display =
+      "none";
+
+  }
+);
+
+
+/* =====================================================
+   AR ERROR
+   ===================================================== */
+
+scene.addEventListener(
+  "arError",
+  event => {
+
+    console.error(
+      "MindAR error:",
+      event
+    );
+
+    arStatus.style.display =
+      "none";
+
+    alert(
+      "Camera could not start. Please allow camera permission and try again."
+    );
+
+  }
+);
+
+
+/* =====================================================
    START AR
-   ===================================== */
+   ===================================================== */
 
 startButton.addEventListener(
   "click",
-  async () => {
+  () => {
 
     if (!targetsReady) {
+
       return;
+
     }
 
 
-    startButton.disabled = true;
+    startButton.disabled =
+      true;
 
     startButton.textContent =
       "OPENING...";
@@ -1005,49 +1187,117 @@ startButton.addEventListener(
       ];
 
 
-    try {
+    if (!arSystem) {
 
-      await arSystem.start();
-
-
-      introScreen.classList.add(
-        "hide"
+      console.error(
+        "MindAR system not found"
       );
 
+      startButton.disabled =
+        false;
 
-      setTimeout(() => {
+      startButton.textContent =
+        "UNVEIL ✦";
 
-        introScreen.style.display =
-          "none";
+      return;
 
-      }, 600);
+    }
 
 
-    } catch (error) {
+    /*
+      Show small status only while
+      MindAR initializes.
+    */
+
+    arStatus.style.display =
+      "flex";
+
+
+    /*
+      IMPORTANT FIX:
+
+      DO NOT use:
+
+        await arSystem.start();
+
+      We start the engine and immediately
+      remove the intro screen.
+
+      Camera is therefore not hidden
+      behind the premium intro.
+    */
+
+    try {
+
+      arSystem.start();
+
+    }
+
+    catch(error) {
 
       console.error(
         "AR start error:",
         error
       );
 
+      arStatus.style.display =
+        "none";
 
-      startButton.disabled = false;
+      startButton.disabled =
+        false;
 
       startButton.textContent =
         "UNVEIL ✦";
 
+      return;
+
     }
+
+
+    /*
+      Reveal camera immediately.
+    */
+
+    introScreen.classList.add(
+      "hide"
+    );
+
+
+    setTimeout(
+      () => {
+
+        introScreen.style.display =
+          "none";
+
+      },
+      600
+    );
 
   }
 );
 
 
-/* =====================================
-   LOAD CONTENT
-   ===================================== */
+/* =====================================================
+   LOAD AR CONTENT
+   ===================================================== */
 
 loadContent();
 
+
+/* =====================================================
+   DEBUG EVENTS
+   ===================================================== */
+
+scene.addEventListener(
+  "loaded",
+  () => {
+
+    console.log(
+      "A-Frame scene loaded"
+    );
+
+  }
+);
 
 </script>
 
