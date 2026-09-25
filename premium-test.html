@@ -7,6 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
+
     * {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
@@ -19,9 +20,9 @@
       font-family: Arial, Helvetica, sans-serif;
     }
 
-    /* =========================
-       PREMIUM OPENING SCREEN
-       ========================= */
+    /* =====================================
+       PREMIUM INTRO SCREEN
+       ===================================== */
 
     #introScreen {
       position: fixed;
@@ -37,9 +38,9 @@
 
       background:
         radial-gradient(
-          circle at 50% 35%,
-          rgba(255, 193, 7, 0.13),
-          transparent 32%
+          circle at 50% 32%,
+          rgba(255, 193, 7, 0.14),
+          transparent 34%
         ),
         linear-gradient(
           145deg,
@@ -52,103 +53,188 @@
       text-align: center;
     }
 
-    /* Subtle gold border */
+
+    /* PREMIUM BORDER */
 
     #introScreen::before {
       content: "";
+
       position: absolute;
+
       inset: 14px;
 
-      border: 1px solid rgba(255, 196, 60, 0.22);
+      border:
+        1px solid
+        rgba(255, 196, 60, 0.22);
+
       border-radius: 22px;
 
       pointer-events: none;
     }
 
-    /* Logo */
+
+    /* =====================================
+       LOGO
+       ===================================== */
 
     #brandLogo {
-      width: min(78vw, 360px);
+
+      width:
+        min(78vw, 360px);
+
       max-height: 210px;
+
       object-fit: contain;
 
-      margin-bottom: 28px;
+      margin-bottom: 22px;
 
       filter:
-        drop-shadow(0 0 12px rgba(255, 190, 40, 0.28))
-        drop-shadow(0 0 30px rgba(255, 180, 20, 0.12));
+        drop-shadow(
+          0 0 12px
+          rgba(255, 190, 40, 0.28)
+        )
+        drop-shadow(
+          0 0 30px
+          rgba(255, 180, 20, 0.12)
+        );
 
-      animation: logoAppear 1.2s ease forwards;
+      animation:
+        logoAppear 1.2s ease forwards;
     }
 
+
     @keyframes logoAppear {
+
       from {
+
         opacity: 0;
-        transform: scale(0.88);
+
+        transform:
+          scale(0.88);
+
       }
 
       to {
+
         opacity: 1;
-        transform: scale(1);
+
+        transform:
+          scale(1);
+
       }
+
     }
 
-    /* Small label */
+
+    /* =====================================
+       BRAND LABEL
+       ===================================== */
 
     #experienceLabel {
+
       font-size: 11px;
+
       letter-spacing: 4px;
-      color: rgba(255, 215, 120, 0.8);
+
+      color:
+        rgba(255, 215, 120, 0.8);
+
       margin-bottom: 12px;
+
       text-transform: uppercase;
     }
 
-    /* Main heading */
+
+    /* =====================================
+       MAIN TITLE
+       ===================================== */
 
     #mainTitle {
+
       margin: 0;
 
-      font-size: clamp(28px, 8vw, 44px);
+      font-size:
+        clamp(27px, 8vw, 44px);
+
       line-height: 1.08;
 
       font-weight: 700;
+
       letter-spacing: 1px;
 
-      background: linear-gradient(
-        90deg,
-        #fff4c7,
-        #ffd34d,
-        #ffffff,
-        #d99b20
-      );
+      background:
+        linear-gradient(
+          90deg,
+          #fff4c7,
+          #ffd34d,
+          #ffffff,
+          #d99b20
+        );
 
       -webkit-background-clip: text;
+
       background-clip: text;
+
       color: transparent;
     }
 
-    /* Description */
 
-    #description {
-      max-width: 330px;
+    /* =====================================
+       PREMIUM TAGLINE
+       ===================================== */
 
-      margin: 14px 0 28px;
+    #tagline {
 
-      font-size: 14px;
-      line-height: 1.6;
+      margin-top: 9px;
 
-      color: rgba(255, 255, 255, 0.68);
+      font-size: 13px;
+
+      letter-spacing: 1.5px;
+
+      color:
+        rgba(255, 215, 130, 0.72);
+
+      text-transform: uppercase;
     }
 
-    /* CTA */
+
+    /* =====================================
+       DESCRIPTION
+       ===================================== */
+
+    #description {
+
+      max-width: 340px;
+
+      margin:
+        16px 0 28px;
+
+      font-size: 14px;
+
+      line-height: 1.65;
+
+      color:
+        rgba(255, 255, 255, 0.68);
+    }
+
+
+    /* =====================================
+       CTA BUTTON
+       ===================================== */
 
     #startButton {
+
       position: relative;
 
-      min-width: 230px;
-      padding: 17px 28px;
+      min-width: 225px;
 
-      border: 1px solid rgba(255, 220, 120, 0.75);
+      padding:
+        17px 30px;
+
+      border:
+        1px solid
+        rgba(255, 220, 120, 0.75);
+
       border-radius: 999px;
 
       background:
@@ -162,67 +248,103 @@
       color: #080808;
 
       font-size: 15px;
+
       font-weight: 800;
-      letter-spacing: 2px;
+
+      letter-spacing: 2.5px;
 
       cursor: pointer;
 
       box-shadow:
-        0 0 18px rgba(255, 194, 50, 0.25),
-        inset 0 1px 1px rgba(255,255,255,0.8);
+        0 0 18px
+        rgba(255, 194, 50, 0.25),
+
+        inset 0 1px 1px
+        rgba(255,255,255,0.8);
 
       transition:
         transform 0.2s ease,
         box-shadow 0.2s ease;
     }
 
+
     #startButton:active {
-      transform: scale(0.96);
+
+      transform:
+        scale(0.96);
+
+      box-shadow:
+        0 0 28px
+        rgba(255, 194, 50, 0.4);
     }
 
+
     #startButton:disabled {
+
       opacity: 0.55;
+
       cursor: default;
     }
 
-    /* Bottom instruction */
+
+    /* =====================================
+       CAMERA INSTRUCTION
+       ===================================== */
 
     #scanHint {
+
       margin-top: 22px;
 
       font-size: 12px;
+
       line-height: 1.5;
 
-      color: rgba(255,255,255,0.48);
+      color:
+        rgba(255,255,255,0.48);
     }
+
 
     #scanHint span {
-      color: #e8b83d;
+
+      color:
+        #e8b83d;
     }
 
-    /* Loading */
+
+    /* =====================================
+       LOADING
+       ===================================== */
 
     #loadingText {
+
       position: fixed;
+
       z-index: 100000;
 
       left: 50%;
+
       bottom: 34px;
 
-      transform: translateX(-50%);
+      transform:
+        translateX(-50%);
 
-      color: rgba(255,255,255,0.6);
+      color:
+        rgba(255,255,255,0.6);
 
       font-size: 12px;
+
       letter-spacing: 1px;
 
       display: none;
     }
 
+
     .loaderDot {
+
       display: inline-block;
 
       width: 5px;
+
       height: 5px;
 
       margin-left: 4px;
@@ -231,44 +353,77 @@
 
       background: #e8b83d;
 
-      animation: pulse 1.2s infinite ease-in-out;
+      animation:
+        pulse 1.2s
+        infinite
+        ease-in-out;
     }
 
+
     @keyframes pulse {
+
       0%, 100% {
+
         opacity: 0.25;
-        transform: scale(0.7);
+
+        transform:
+          scale(0.7);
       }
 
       50% {
+
         opacity: 1;
-        transform: scale(1);
+
+        transform:
+          scale(1);
       }
+
     }
 
-    /* Hide intro */
+
+    /* =====================================
+       INTRO EXIT
+       ===================================== */
 
     #introScreen.hide {
-      animation: introExit 0.55s ease forwards;
+
+      animation:
+        introExit
+        0.55s
+        ease
+        forwards;
     }
 
+
     @keyframes introExit {
+
       to {
+
         opacity: 0;
-        transform: scale(1.03);
+
+        transform:
+          scale(1.03);
+
         pointer-events: none;
       }
+
     }
+
   </style>
 </head>
 
+
 <body>
 
-  <!-- =========================
-       PREMIUM INTRO
-       ========================= -->
+
+  <!-- =====================================
+       PREMIUM OPENING SCREEN
+       ===================================== -->
 
   <div id="introScreen">
+
+
+    <!-- LOGO -->
 
     <img
       id="brandLogo"
@@ -276,360 +431,560 @@
       alt="Peculiar Print Hub"
     >
 
+
+    <!-- BRAND -->
+
     <div id="experienceLabel">
       PECULIAR PRINT HUB
     </div>
+
+
+    <!-- MAIN MESSAGE -->
 
     <h1 id="mainTitle">
       BRING IT TO LIFE
     </h1>
 
+
+    <!-- TAGLINE -->
+
+    <div id="tagline">
+      ONE PRINT. A WHOLE NEW EXPERIENCE.
+    </div>
+
+
+    <!-- DESCRIPTION -->
+
     <p id="description">
       Your printed poster has more to reveal.
-      Point your camera at the poster and experience
-      the story beyond print.
+      Point your camera at the poster and watch
+      your print come alive.
     </p>
 
-    <button id="startButton" disabled>
-      LOADING...
+
+    <!-- CTA -->
+
+    <button
+      id="startButton"
+      disabled
+    >
+      UNVEIL ✦
     </button>
 
+
+    <!-- CAMERA INSTRUCTION -->
+
     <div id="scanHint">
+
       <span>✦</span>
+
       Allow camera access when prompted
+
       <span>✦</span>
+
     </div>
 
   </div>
 
+
+  <!-- LOADING -->
+
   <div id="loadingText">
+
     Preparing your AR experience
+
     <span class="loaderDot"></span>
+
   </div>
 
 
-  <!-- =========================
+  <!-- =====================================
        EXISTING AR ENGINE
-       ========================= -->
+       ===================================== -->
 
   <a-scene
     mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;"
     color-space="sRGB"
     renderer="colorManagement: true"
     vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: false">
+    device-orientation-permission-ui="enabled: false"
+  >
 
-    <a-assets id="videoAssets"></a-assets>
+
+    <a-assets
+      id="videoAssets">
+    </a-assets>
+
 
     <a-camera
       position="0 0 0"
-      look-controls="enabled: false">
+      look-controls="enabled: false"
+    >
     </a-camera>
+
 
   </a-scene>
 
 
 <script>
 
+
+/* =====================================
+   ELEMENTS
+   ===================================== */
+
 const introScreen =
-  document.querySelector("#introScreen");
+  document.querySelector(
+    "#introScreen"
+  );
+
 
 const startButton =
-  document.querySelector("#startButton");
+  document.querySelector(
+    "#startButton"
+  );
+
 
 const loadingText =
-  document.querySelector("#loadingText");
+  document.querySelector(
+    "#loadingText"
+  );
+
 
 const scene =
-  document.querySelector("a-scene");
+  document.querySelector(
+    "a-scene"
+  );
+
 
 const videoAssets =
-  document.querySelector("#videoAssets");
+  document.querySelector(
+    "#videoAssets"
+  );
+
 
 let videos = [];
+
 let targetsReady = false;
 
 
-/* =========================
+
+/* =====================================
    LOAD CONTENT DATABASE
-   ========================= */
+   ===================================== */
 
 async function loadContent() {
 
   try {
 
-    loadingText.style.display = "block";
+
+    loadingText.style.display =
+      "block";
+
 
     const response =
-      await fetch("./content.json");
+      await fetch(
+        "./content.json"
+      );
+
 
     if (!response.ok) {
+
       throw new Error(
         "Could not load content.json"
       );
+
     }
+
 
     const data =
       await response.json();
+
 
     if (
       !data.posters ||
       data.posters.length === 0
     ) {
+
       throw new Error(
         "No posters found in content.json"
       );
+
     }
 
 
-    /* =========================
+
+    /* =================================
        CREATE ALL VIDEOS + TARGETS
-       ========================= */
+       ================================= */
 
-    data.posters.forEach(poster => {
-
-      const videoId =
-        "video_" + poster.id;
+    data.posters.forEach(
+      poster => {
 
 
-      /* CREATE VIDEO */
-
-      const video =
-        document.createElement("video");
-
-      video.id = videoId;
-
-      video.src =
-        "./" + poster.video;
-
-      video.loop = true;
-
-      video.crossOrigin = "anonymous";
-
-      video.playsInline = true;
-
-      video.setAttribute(
-        "webkit-playsinline",
-        ""
-      );
-
-      videoAssets.appendChild(video);
-
-      videos.push(video);
+        const videoId =
+          "video_" +
+          poster.id;
 
 
-      /* CREATE TARGET */
 
-      const target =
-        document.createElement("a-entity");
+        /* CREATE VIDEO */
 
-      target.setAttribute(
-        "mindar-image-target",
-        "targetIndex: " +
-        poster.targetIndex
-      );
+        const video =
+          document.createElement(
+            "video"
+          );
 
 
-      /* CREATE VIDEO PLANE */
-
-      const videoPlane =
-        document.createElement("a-video");
-
-      videoPlane.setAttribute(
-        "src",
-        "#" + videoId
-      );
-
-      videoPlane.setAttribute(
-        "position",
-        "0 0 0"
-      );
-
-      videoPlane.setAttribute(
-        "width",
-        "1"
-      );
-
-      videoPlane.setAttribute(
-        "height",
-        "1"
-      );
-
-      videoPlane.setAttribute(
-        "material",
-        "shader: flat"
-      );
+        video.id =
+          videoId;
 
 
-      target.appendChild(
-        videoPlane
-      );
-
-      scene.appendChild(
-        target
-      );
+        video.src =
+          "./" +
+          poster.video;
 
 
-      /* TARGET FOUND */
+        video.loop =
+          true;
 
-      target.addEventListener(
-        "targetFound",
-        async () => {
 
-          stopOtherVideos(video);
+        video.crossOrigin =
+          "anonymous";
 
-          try {
 
-            video.currentTime = 0;
+        video.playsInline =
+          true;
 
-            await video.play();
 
-          } catch (error) {
+        video.setAttribute(
+          "webkit-playsinline",
+          ""
+        );
 
-            console.log(
-              "Video play blocked:",
-              poster.id,
-              error
+
+        videoAssets.appendChild(
+          video
+        );
+
+
+        videos.push(
+          video
+        );
+
+
+
+        /* CREATE TARGET */
+
+        const target =
+          document.createElement(
+            "a-entity"
+          );
+
+
+        target.setAttribute(
+          "mindar-image-target",
+
+          "targetIndex: " +
+          poster.targetIndex
+        );
+
+
+
+        /* CREATE VIDEO PLANE */
+
+        const videoPlane =
+          document.createElement(
+            "a-video"
+          );
+
+
+        videoPlane.setAttribute(
+          "src",
+
+          "#" +
+          videoId
+        );
+
+
+        videoPlane.setAttribute(
+          "position",
+
+          "0 0 0"
+        );
+
+
+        videoPlane.setAttribute(
+          "width",
+
+          "1"
+        );
+
+
+        videoPlane.setAttribute(
+          "height",
+
+          "1"
+        );
+
+
+        videoPlane.setAttribute(
+          "material",
+
+          "shader: flat"
+        );
+
+
+        target.appendChild(
+          videoPlane
+        );
+
+
+        scene.appendChild(
+          target
+        );
+
+
+
+        /* TARGET FOUND */
+
+        target.addEventListener(
+          "targetFound",
+
+          async () => {
+
+
+            stopOtherVideos(
+              video
             );
+
+
+            try {
+
+
+              video.currentTime =
+                0;
+
+
+              await video.play();
+
+
+            } catch (error) {
+
+
+              console.log(
+
+                "Video play blocked:",
+
+                poster.id,
+
+                error
+
+              );
+
+            }
 
           }
 
-        }
-      );
+        );
 
 
-      /* TARGET LOST */
 
-      target.addEventListener(
-        "targetLost",
-        () => {
+        /* TARGET LOST */
 
-          video.pause();
+        target.addEventListener(
+          "targetLost",
 
-        }
-      );
+          () => {
 
-    });
+            video.pause();
+
+          }
+
+        );
+
+      }
+    );
 
 
-    targetsReady = true;
 
-    loadingText.style.display = "none";
+    /* READY */
 
-    startButton.disabled = false;
+    targetsReady =
+      true;
+
+
+    loadingText.style.display =
+      "none";
+
+
+    startButton.disabled =
+      false;
+
 
     startButton.textContent =
-      "BRING IT TO LIFE";
+      "UNVEIL ✦";
 
 
     console.log(
+
       "AR content loaded:",
+
       data.posters.length,
+
       "posters"
+
     );
 
 
   } catch (error) {
 
+
     console.error(
+
       "Content database error:",
+
       error
+
     );
+
 
     loadingText.textContent =
       "Failed to load AR content.";
 
-    startButton.disabled = true;
+
+    startButton.disabled =
+      true;
 
   }
 
 }
 
 
-/* =========================
+
+/* =====================================
    STOP OTHER VIDEOS
-   ========================= */
+   ===================================== */
 
 function stopOtherVideos(
   currentVideo
 ) {
 
-  videos.forEach(video => {
 
-    if (video !== currentVideo) {
+  videos.forEach(
+    video => {
 
-      video.pause();
 
-      video.currentTime = 0;
+      if (
+        video !== currentVideo
+      ) {
+
+
+        video.pause();
+
+
+        video.currentTime =
+          0;
+
+      }
 
     }
-
-  });
+  );
 
 }
 
 
-/* =========================
+
+/* =====================================
    START AR
-   ========================= */
+   ===================================== */
 
 startButton.addEventListener(
+
   "click",
+
   async () => {
 
+
     if (!targetsReady) {
+
       return;
+
     }
 
-    startButton.disabled = true;
+
+    startButton.disabled =
+      true;
+
 
     startButton.textContent =
-      "STARTING...";
+      "OPENING...";
+
 
     const arSystem =
       scene.systems[
         "mindar-image-system"
       ];
 
+
     try {
 
+
       await arSystem.start();
+
 
       introScreen.classList.add(
         "hide"
       );
 
-      setTimeout(() => {
 
-        introScreen.style.display =
-          "none";
+      setTimeout(
+        () => {
 
-      }, 600);
+
+          introScreen.style.display =
+            "none";
+
+
+        },
+
+        600
+      );
 
 
     } catch (error) {
 
+
       console.error(
+
         "AR start error:",
+
         error
+
       );
 
-      startButton.disabled = false;
+
+      startButton.disabled =
+        false;
+
 
       startButton.textContent =
-        "BRING IT TO LIFE";
+        "UNVEIL ✦";
 
     }
 
   }
+
 );
 
 
-/* =========================
+
+/* =====================================
    LOAD CONTENT
-   ========================= */
+   ===================================== */
 
 loadContent();
+
 
 </script>
 
