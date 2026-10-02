@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Peculiar AR — BT TEST</title>
+<script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+<style>
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;font-family:Arial,sans-serif}
+  #start{position:fixed;z-index:20;left:50%;top:50%;transform:translate(-50%,-50%);padding:16px 28px;border:0;border-radius:12px;background:#fff;color:#111;font-size:18px;font-weight:700}
+  #status{position:fixed;z-index:20;top:20px;left:0;width:100%;text-align:center;color:#fff;font-size:14px;text-shadow:0 1px 4px #000;pointer-events:none}
+  #player{display:none;position:fixed;z-index:50;inset:0;width:100%;height:100%;border:0;background:#000}
+  #close{display:none;position:fixed;z-index:60;right:16px;top:16px;width:46px;height:46px;border:0;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;font-size:30px;line-height:46px}
+  a-scene{position:fixed;inset:0}
+</style>
+</head>
+<body>
+<button id="start">START AR TEST</button>
+<div id="status">BUNNY STREAM TEST</div>
+<iframe id="player" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen playsinline></iframe>
+<button id="close">×</button>
+
+<a-scene
+  mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;"
+  color-space="sRGB"
+  renderer="colorManagement: true; physicallyCorrectLights: true"
+  vr-mode-ui="enabled: false"
+  device-orientation-permission-ui="enabled: false">
+  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+</a-scene>
+
+<script>
+const start = document.getElementById('start');
+const status = document.getElementById('status');
+const player = document.getElementById('player');
+const closeBtn = document.getElementById('close');
+const scene = document.querySelector('a-scene');
+
+const BUNNY_URL = 'https://player.mediadelivery.net/play/768132/f0663203-7b0f-4d0d-871b-8e2b61a16dca';
+let active = false;
+
+const target = document.createElement('a-entity');
+target.setAttribute('mindar-image-target', 'targetIndex: 0');
+scene.appendChild(target);
+
+target.addEventListener('targetFound', () => {
+  if (active) return;
+  active = true;
+  status.textContent = 'Vijay1 — Bunny Stream';
+  player.src = BUNNY_URL + '?autoplay=true&muted=false';
+  player.style.display = 'block';
+  closeBtn.style.display = 'block';
+  try { scene.systems['mindar-image-system'].stop(); } catch(e) {}
+});
+
+async function closePlayer(){
+  player.src = 'about:blank';
+  player.style.display = 'none';
+  closeBtn.style.display = 'none';
+  active = false;
+  status.textContent = 'POINT CAMERA AT POSTER 001';
+  try { await scene.systems['mindar-image-system'].start(); } catch(e) { console.log(e); }
+}
+
+closeBtn.addEventListener('click', closePlayer);
+closeBtn.addEventListener('touchend', e => { e.preventDefault(); closePlayer(); }, {passive:false});
+
+start.addEventListener('click', async () => {
+  start.style.display = 'none';
+  status.textContent = 'STARTING CAMERA...';
+  try {
+    await scene.systems['mindar-image-system'].start();
+    status.textContent = 'POINT CAMERA AT POSTER 001';
+  } catch(e) {
+    status.textContent = 'CAMERA START FAILED';
+    console.error(e);
+    start.style.display = 'block';
+  }
+});
+</script>
+</body>
+</html>
