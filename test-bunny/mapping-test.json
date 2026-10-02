@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "posters": [
+    {
+      "id": "postertest1",
+      "targetFile": "postertest1.jpg",
+      "targetIndex": 0,
+      "videoId": "75238576-90da-4383-9ee9-d46fda583dd3"
+    },
+    {
+      "id": "postertest2",
+      "targetFile": "postertest2.jpg",
+      "targetIndex": 1,
+      "videoId": "8556137b-1d23-47de-ae90-a165a7d8fdc4"
+    },
+    {
+      "id": "postertest3",
+      "targetFile": "postertest3.jpg",
+      "targetIndex": 2,
+      "videoId": "31c4e734-4798-48c3-977c-3e839b7489a2"
+    }
+  ]
+}
