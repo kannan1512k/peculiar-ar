@@ -1,0 +1,277 @@
+name: Bunny Production Automation - Candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Validate Bunny mapping and MindAR build without changing production files"
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bunny-production-automation
+  cancel-in-progress: false
+
+jobs:
+  validate-and-build:
+    runs-on: ubuntu-latest
+
+    env:
+      BUNNY_LIBRARY_ID: "768132"
+      BUNNY_API_KEY: ${{ secrets.BUNNY_API_KEY }}
+      DRY_RUN: ${{ inputs.dry_run }}
+
+    steps:
+      - name: Checkout production repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install MindAR build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            python3 \
+            make \
+            g++ \
+            libcairo2-dev \
+            libpango1.0-dev \
+            libjpeg-dev \
+            libgif-dev \
+            librsvg2-dev
+
+      - name: Clone MindAR v1.2.5
+        run: |
+          git clone --depth 1 --branch 1.2.5 \
+            https://github.com/hiukim/mind-ar-js.git mindar
+
+      - name: Install MindAR dependencies
+        working-directory: mindar
+        run: npm install
+
+      - name: Build production candidate
+        run: |
+          cat > mindar/build-production-candidate.js <<'NODE'
+          import { OfflineCompiler } from './src/image-target/offline-compiler.js';
+          import { loadImage } from 'canvas';
+          import { readFile, writeFile } from 'fs/promises';
+          import * as msgpack from '@msgpack/msgpack';
+          import fs from 'fs';
+          import path from 'path';
+
+          const repoRoot = process.env.GITHUB_WORKSPACE;
+          const targetDir = path.join(repoRoot, 'targets');
+          const mindFile = path.join(repoRoot, 'targets.mind');
+          const contentFile = path.join(repoRoot, 'content.json');
+          const dryRun = String(process.env.DRY_RUN).toLowerCase() === 'true';
+          const bunnyLibraryId = process.env.BUNNY_LIBRARY_ID;
+          const bunnyApiKey = process.env.BUNNY_API_KEY;
+
+          if (!bunnyApiKey) {
+            throw new Error('BUNNY_API_KEY secret is missing.');
+          }
+
+          if (!fs.existsSync(targetDir)) {
+            throw new Error('targets/ folder does not exist.');
+          }
+
+          if (!fs.existsSync(mindFile)) {
+            throw new Error('targets.mind does not exist.');
+          }
+
+          if (!fs.existsSync(contentFile)) {
+            throw new Error('content.json does not exist.');
+          }
+
+          const existingBuffer = await readFile(mindFile);
+          const existingData = msgpack.decode(existingBuffer);
+
+          if (existingData.v !== 2 || !Array.isArray(existingData.dataList)) {
+            throw new Error('Unsupported targets.mind format.');
+          }
+
+          const existingCount = existingData.dataList.length;
+          const content = JSON.parse(await readFile(contentFile, 'utf8'));
+
+          if (!Array.isArray(content.posters)) {
+            throw new Error('content.json has no posters array.');
+          }
+
+          if (content.posters.length !== existingCount) {
+            throw new Error(
+              `Safety check failed: content.json has ${content.posters.length} posters, ` +
+              `but targets.mind has ${existingCount} targets.`
+            );
+          }
+
+          const imageExtensions = new Set(['.jpg', '.jpeg', '.png', '.webp']);
+
+          const allFiles = fs.readdirSync(targetDir)
+            .filter(file => imageExtensions.has(path.extname(file).toLowerCase()))
+            .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+
+          const mapped = new Set(content.posters.map(p => p.targetFile));
+
+          const newFiles = allFiles.filter(file => !mapped.has(file));
+
+          console.log(`Existing targets: ${existingCount}`);
+          console.log(`Images in targets/: ${allFiles.length}`);
+          console.log(`New unmapped posters: ${newFiles.length}`);
+
+          if (newFiles.length === 0) {
+            console.log('Nothing to build.');
+            process.exit(0);
+          }
+
+          async function bunnyFind(baseName) {
+            const headers = {
+              'AccessKey': bunnyApiKey,
+              'Accept': 'application/json'
+            };
+
+            const encoded = encodeURIComponent(baseName);
+            const url =
+              `https://video.bunnycdn.com/library/${bunnyLibraryId}/videos?page=1&itemsPerPage=100&search=${encoded}`;
+
+            const response = await fetch(url, { headers });
+
+            if (!response.ok) {
+              throw new Error(
+                `Bunny API failed (${response.status}): ${await response.text()}`
+              );
+            }
+
+            const data = await response.json();
+            const videos = Array.isArray(data.items) ? data.items : [];
+
+            const exact = videos.find(video => {
+              const title = String(video.title || '').trim();
+              return title === baseName || title === `${baseName}.mp4`;
+            });
+
+            return exact || null;
+          }
+
+          const ready = [];
+
+          for (const posterFile of newFiles) {
+            const baseName = path.parse(posterFile).name;
+            const bunnyVideo = await bunnyFind(baseName);
+
+            if (!bunnyVideo) {
+              console.log(`WAITING FOR BUNNY VIDEO: ${baseName}`);
+              continue;
+            }
+
+            ready.push({
+              posterFile,
+              baseName,
+              videoId: bunnyVideo.guid
+            });
+
+            console.log(
+              `MATCHED: ${posterFile} -> ${bunnyVideo.title} -> ${bunnyVideo.guid}`
+            );
+          }
+
+          if (ready.length === 0) {
+            console.log('No posters are ready yet. No production files changed.');
+            process.exit(0);
+          }
+
+          const images = [];
+          for (const item of ready) {
+            const imagePath = path.join(targetDir, item.posterFile);
+            images.push(await loadImage(imagePath));
+          }
+
+          console.log(`Compiling ${images.length} new MindAR target(s)...`);
+
+          const compiler = new OfflineCompiler();
+
+          await compiler.compileImageTargets(
+            images,
+            (progress) => {
+              console.log(`MindAR progress: ${Math.round(progress * 100)}%`);
+            }
+          );
+
+          const exportedBuffer = await compiler.exportData();
+          const newData = msgpack.decode(exportedBuffer);
+
+          if (!Array.isArray(newData.dataList)) {
+            throw new Error('New MindAR export has no dataList.');
+          }
+
+          const combinedDataList = [
+            ...existingData.dataList,
+            ...newData.dataList
+          ];
+
+          const combined = msgpack.encode({
+            v: existingData.v,
+            dataList: combinedDataList
+          });
+
+          const nextContent = JSON.parse(JSON.stringify(content));
+
+          for (let i = 0; i < ready.length; i++) {
+            const item = ready[i];
+
+            nextContent.posters.push({
+              id: item.baseName,
+              targetFile: item.posterFile,
+              targetIndex: existingCount + i,
+              videoId: item.videoId
+            });
+          }
+
+          nextContent.posters.sort(
+            (a, b) => Number(a.targetIndex) - Number(b.targetIndex)
+          );
+
+          const outMind = path.join(repoRoot, 'production-candidate-targets.mind');
+          const outContent = path.join(repoRoot, 'production-candidate-content.json');
+
+          await writeFile(outMind, combined);
+          await writeFile(outContent, JSON.stringify(nextContent, null, 2) + '\n');
+
+          console.log(`Candidate targets: ${outMind}`);
+          console.log(`Candidate mapping: ${outContent}`);
+
+          if (dryRun) {
+            console.log('DRY RUN: production files were NOT modified.');
+            process.exit(0);
+          }
+
+          /*
+           * This candidate intentionally does not overwrite production.
+           * A later production cutover must explicitly replace/retire the
+           * old local-MP4 build workflow and update the production HTML
+           * to consume videoId/Bunny HLS.
+           */
+          throw new Error(
+            'Production write is intentionally blocked in this candidate. ' +
+            'Complete cutover review before enabling production writes.'
+          );
+          NODE
+
+          cd mindar
+          node build-production-candidate.js
+
+      - name: Upload candidate artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bunny-production-candidate
+          path: |
+            production-candidate-targets.mind
+            production-candidate-content.json
+          if-no-files-found: ignore
