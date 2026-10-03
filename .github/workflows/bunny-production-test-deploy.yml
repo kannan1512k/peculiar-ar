@@ -1,0 +1,135 @@
+name: Bunny Production AR Test Deploy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bunny-production-ar-test
+  cancel-in-progress: false
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    env:
+      BUNNY_LIBRARY_ID: "768132"
+      BUNNY_API_KEY: ${{ secrets.BUNNY_API_KEY }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate test HTML
+        run: |
+          test -f bunny-production-bunny-test.html
+          test -f targets.mind
+          test -f content.json
+
+      - name: Generate Bunny mapping and test package
+        run: |
+          mkdir -p production-bunny-test
+
+          cp bunny-production-bunny-test.html production-bunny-test/index.html
+          cp targets.mind production-bunny-test/targets.mind
+
+          node <<'NODE'
+          const fs = require('fs');
+
+          const content = JSON.parse(fs.readFileSync('content.json', 'utf8'));
+          const libraryId = process.env.BUNNY_LIBRARY_ID;
+          const apiKey = process.env.BUNNY_API_KEY;
+
+          if (!apiKey) throw new Error('BUNNY_API_KEY secret is missing.');
+          if (!Array.isArray(content.posters) || content.posters.length === 0) {
+            throw new Error('content.json has no posters.');
+          }
+
+          async function findBunny(videoFile) {
+            const base = videoFile.replace(/\.[^.]+$/, '');
+            const url =
+              `https://video.bunnycdn.com/library/${libraryId}/videos` +
+              `?page=1&itemsPerPage=100&search=${encodeURIComponent(base)}`;
+
+            const response = await fetch(url, {
+              headers: {
+                AccessKey: apiKey,
+                Accept: 'application/json'
+              }
+            });
+
+            if (!response.ok) {
+              throw new Error(`Bunny API ${response.status}: ${await response.text()}`);
+            }
+
+            const data = await response.json();
+            const videos = Array.isArray(data.items) ? data.items : [];
+
+            return videos.find(v => {
+              const title = String(v.title || '').trim();
+              return title === base || title === `${base}.mp4`;
+            });
+          }
+
+          (async () => {
+            const posters = [];
+
+            for (const p of content.posters) {
+              if (!p.video) {
+                throw new Error(`Missing video field for ${p.targetFile}`);
+              }
+
+              const bunny = await findBunny(p.video);
+
+              if (!bunny) {
+                throw new Error(
+                  `No Bunny match for ${p.targetFile} -> ${p.video}`
+                );
+              }
+
+              posters.push({
+                id: p.id,
+                targetFile: p.targetFile,
+                targetIndex: Number(p.targetIndex),
+                videoId: bunny.guid
+              });
+
+              console.log(
+                `MATCHED: ${p.targetFile} -> ${bunny.title} -> ${bunny.guid}`
+              );
+            }
+
+            const mapping = {
+              version: 3,
+              source: 'production content.json + Bunny Stream',
+              posters
+            };
+
+            fs.writeFileSync(
+              'production-bunny-test/bunny-production-mapping.json',
+              JSON.stringify(mapping, null, 2) + '\n'
+            );
+
+            console.log(`SUCCESS: ${posters.length}/${content.posters.length} mapped.`);
+          })().catch(err => {
+            console.error(err);
+            process.exit(1);
+          });
+          NODE
+
+      - name: Commit test package only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add production-bunny-test
+
+          if git diff --cached --quiet; then
+            echo "No test-package changes."
+            exit 0
+          fi
+
+          git commit -m "Add Bunny production AR test package"
+          git push
