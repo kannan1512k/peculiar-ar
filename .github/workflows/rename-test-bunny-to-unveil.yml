@@ -1,0 +1,52 @@
+name: Rename test-bunny to unveil
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rename:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Rename folder and working HTML
+        run: |
+          set -e
+
+          if [ ! -d "test-bunny" ]; then
+            echo "ERROR: test-bunny folder not found."
+            exit 1
+          fi
+
+          git mv test-bunny unveil
+
+          if [ ! -f "unveil/bunny-mapping-smooth-fit-test.html" ]; then
+            echo "ERROR: working HTML file not found."
+            exit 1
+          fi
+
+          git mv unveil/bunny-mapping-smooth-fit-test.html unveil/index.html
+
+      - name: Commit and push
+        run: |
+          set -e
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "Nothing to rename."
+            exit 0
+          fi
+
+          git commit -m "Rename test-bunny to unveil"
+          git push
