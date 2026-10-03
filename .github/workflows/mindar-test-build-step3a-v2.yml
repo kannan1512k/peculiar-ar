@@ -1,0 +1,80 @@
+name: MindAR Test Build v2
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-mindar-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check test posters
+        run: |
+          set -e
+
+          TEST_DIR="test-bunny"
+
+          echo "Checking poster files in $TEST_DIR..."
+
+          if ! find "$TEST_DIR" -maxdepth 1 -type f \
+            \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" \) \
+            | grep -q .; then
+            echo "ERROR: No poster image files found in $TEST_DIR"
+            exit 1
+          fi
+
+          echo "Poster files found:"
+          find "$TEST_DIR" -maxdepth 1 -type f \
+            \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" \) \
+            -print
+
+      - name: Install MindAR package
+        run: |
+          set -e
+
+          npm init -y
+          npm install --save-dev mind-ar@1.2.5
+
+          echo "MindAR package installed successfully."
+
+      - name: Find MindAR compiler files
+        run: |
+          set -e
+
+          echo "MindAR package files:"
+          find node_modules/mind-ar -maxdepth 5 -type f \
+            \( -name "offline-compiler.js" -o -name "compiler.js" -o -name "package.json" \) \
+            -print
+
+          echo ""
+          echo "MindAR package installed successfully on Node.js:"
+          node -v
+          npm -v
+
+      - name: Validate compiler installation
+        run: |
+          set -e
+
+          test -d node_modules/mind-ar
+
+          echo "SUCCESS: MindAR package is installed."
+          echo "This test does NOT replace targets-test.mind."
+          echo "Production files are untouched."
+
+      - name: Finish test
+        run: |
+          echo "STEP 3A V2 COMPLETE"
+          echo "Node.js compatibility test passed."
+          echo "No targets-test.mind replacement was made."
+          echo "No production files were changed."
