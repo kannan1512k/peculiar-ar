@@ -1,0 +1,120 @@
+name: Bunny Mapping Test v1
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  create-bunny-mapping:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create mapping entry from Bunny video
+        env:
+          BUNNY_API_KEY: ${{ secrets.BUNNY_API_KEY }}
+        run: |
+          set -e
+
+          TEST_DIR="test-bunny"
+          POSTER_NAME="postertest5"
+          POSTER_FILE="$TEST_DIR/${POSTER_NAME}.jpg"
+          MAPPING_FILE="$TEST_DIR/mapping-test.json"
+          LIBRARY_ID="768132"
+
+          echo "Checking poster: $POSTER_FILE"
+
+          if [ ! -f "$POSTER_FILE" ]; then
+            echo "ERROR: Poster file not found: $POSTER_FILE"
+            exit 1
+          fi
+
+          if [ ! -f "$MAPPING_FILE" ]; then
+            echo "ERROR: Mapping file not found: $MAPPING_FILE"
+            exit 1
+          fi
+
+          echo "Searching Bunny for: $POSTER_NAME"
+
+          RESPONSE=$(curl -sS             -H "AccessKey: $BUNNY_API_KEY"             -H "Accept: application/json"             "https://video.bunnycdn.com/library/$LIBRARY_ID/videos?page=1&itemsPerPage=1000&search=$POSTER_NAME")
+
+          VIDEO_ID=$(echo "$RESPONSE" | jq -r --arg NAME "$POSTER_NAME" '
+            .items[]
+            | select(
+                (.title | ascii_downcase) == ($NAME | ascii_downcase)
+                or
+                ((.title | ascii_downcase) == (($NAME + ".mp4") | ascii_downcase))
+              )
+            | .guid
+          ' | head -n 1)
+
+          MATCHED_TITLE=$(echo "$RESPONSE" | jq -r --arg ID "$VIDEO_ID" '
+            .items[]
+            | select(.guid == $ID)
+            | .title
+          ' | head -n 1)
+
+          if [ -z "$VIDEO_ID" ] || [ "$VIDEO_ID" = "null" ]; then
+            echo "ERROR: Bunny video not found for $POSTER_NAME"
+            exit 1
+          fi
+
+          echo "Bunny video found:"
+          echo "Title: $MATCHED_TITLE"
+          echo "Video ID: $VIDEO_ID"
+
+          EXISTING=$(jq -r --arg ID "$POSTER_NAME" '
+            .posters[] | select(.id == $ID) | .id
+          ' "$MAPPING_FILE" | head -n 1)
+
+          if [ -n "$EXISTING" ]; then
+            echo "Mapping already exists for $POSTER_NAME."
+            echo "No duplicate entry will be created."
+            exit 0
+          fi
+
+          NEXT_INDEX=$(jq '
+            if (.posters | length) == 0
+            then 0
+            else (([.posters[].targetIndex] | max) + 1)
+            end
+          ' "$MAPPING_FILE")
+
+          echo "New targetIndex: $NEXT_INDEX"
+
+          TMP_FILE=$(mktemp)
+
+          jq             --arg id "$POSTER_NAME"             --arg targetFile "${POSTER_NAME}.jpg"             --argjson targetIndex "$NEXT_INDEX"             --arg videoId "$VIDEO_ID" '
+              .posters += [{
+                id: $id,
+                targetFile: $targetFile,
+                targetIndex: $targetIndex,
+                videoId: $videoId
+              }]
+            ' "$MAPPING_FILE" > "$TMP_FILE"
+
+          mv "$TMP_FILE" "$MAPPING_FILE"
+
+          echo "Updated mapping:"
+          cat "$MAPPING_FILE"
+
+      - name: Commit mapping update
+        run: |
+          set -e
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add test-bunny/mapping-test.json
+
+          if git diff --cached --quiet; then
+            echo "No mapping changes to commit."
+            exit 0
+          fi
+
+          git commit -m "test: add Bunny mapping for postertest5"
+          git push
