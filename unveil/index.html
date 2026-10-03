@@ -1522,13 +1522,11 @@ async function loadContent() {
 
         try {
 
-          status.textContent =
-            "CONNECTING TO BUNNY STREAM...";
-
           /*
-            Wait until Bunny's HLS layer is
-            actually ready before starting the
-            existing cinematic sequence.
+            Wait until the video HLS layer is ready.
+            Keep the status UI clean — the streaming
+            provider is intentionally not exposed to
+            the visitor.
           */
           await video._hlsReadyPromise;
 
@@ -1587,7 +1585,7 @@ async function loadContent() {
           );
 
           status.textContent =
-            "BUNNY VIDEO FAILED";
+            "VIDEO FAILED";
 
           activationInProgress =
             false;
