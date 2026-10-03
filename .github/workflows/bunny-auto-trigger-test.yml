@@ -1,0 +1,407 @@
+name: Bunny + MindAR Auto Update Test
+
+on:
+  # Start immediately when a new test poster is committed.
+  push:
+    paths:
+      - "test-bunny/postertest*.jpg"
+      - "test-bunny/postertest*.jpeg"
+      - "test-bunny/postertest*.png"
+      - "test-bunny/postertest*.webp"
+
+  # Also check periodically so a Bunny video uploaded after the poster
+  # is picked up automatically without any manual Run workflow click.
+  schedule:
+    - cron: "*/5 * * * *"
+
+  # Keep manual trigger only as an emergency/test option.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bunny-mindar-test
+  cancel-in-progress: false
+
+jobs:
+  update-test-targets:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Clone MindAR v1.2.5
+        run: |
+          git clone --depth 1 --branch v1.2.5 https://github.com/hiukim/mind-ar-js.git mindar
+
+      - name: Install canvas build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            libcairo2-dev \
+            libpango1.0-dev \
+            libjpeg-dev \
+            libgif-dev \
+            librsvg2-dev
+
+      - name: Install MindAR dependencies
+        working-directory: mindar
+        run: npm install
+
+      - name: Create Bunny + MindAR auto-update compiler
+        env:
+          BUNNY_API_KEY: ${{ secrets.BUNNY_API_KEY }}
+        run: |
+          cat > mindar/build-bunny-auto-update-test.js <<'NODE'
+          import { OfflineCompiler } from './src/image-target/offline-compiler.js';
+          import { loadImage } from 'canvas';
+          import { readFile, writeFile } from 'fs/promises';
+          import * as msgpack from '@msgpack/msgpack';
+          import fs from 'fs';
+          import path from 'path';
+          import https from 'https';
+
+          const repoRoot = process.env.GITHUB_WORKSPACE;
+          const testDir = path.join(repoRoot, 'test-bunny');
+          const mindFile = path.join(testDir, 'targets-test.mind');
+          const mappingFile = path.join(testDir, 'mapping-test.json');
+          const bunnyLibraryId = '768132';
+          const bunnyApiKey = process.env.BUNNY_API_KEY;
+
+          const log = (...args) => console.log(...args);
+
+          function numericPosterSort(a, b) {
+            const na = Number((path.parse(a).name.match(/(\d+)$/) || [])[1] || 0);
+            const nb = Number((path.parse(b).name.match(/(\d+)$/) || [])[1] || 0);
+            return na - nb || a.localeCompare(b);
+          }
+
+          function bunnyRequest(url) {
+            return new Promise((resolve, reject) => {
+              const req = https.get(url, {
+                headers: {
+                  AccessKey: bunnyApiKey,
+                  Accept: 'application/json'
+                }
+              }, (res) => {
+                let body = '';
+                res.on('data', chunk => body += chunk);
+                res.on('end', () => {
+                  if (res.statusCode < 200 || res.statusCode >= 300) {
+                    reject(new Error(`Bunny API ${res.statusCode}: ${body}`));
+                    return;
+                  }
+                  try {
+                    resolve(JSON.parse(body));
+                  } catch (err) {
+                    reject(new Error(`Invalid Bunny API JSON: ${err.message}`));
+                  }
+                });
+              });
+              req.on('error', reject);
+            });
+          }
+
+          async function findBunnyVideo(baseName) {
+            if (!bunnyApiKey) throw new Error('BUNNY_API_KEY secret is missing.');
+
+            const searchUrl = `https://video.bunnycdn.com/library/${bunnyLibraryId}/videos?page=1&itemsPerPage=1000&search=${encodeURIComponent(baseName)}`;
+            const data = await bunnyRequest(searchUrl);
+            const videos = Array.isArray(data.items) ? data.items : [];
+
+            const wanted = baseName.toLowerCase();
+            const match = videos.find(v => {
+              const title = String(v.title || '').toLowerCase();
+              return title === wanted || title === `${wanted}.mp4`;
+            });
+
+            if (!match) {
+              throw new Error(`No Bunny video found for ${baseName}. Expected title ${baseName} or ${baseName}.mp4`);
+            }
+
+            return {
+              videoId: match.guid || match.videoId || match.id,
+              title: match.title
+            };
+          }
+
+          async function main() {
+            log('=== BUNNY + MINDAR AUTO UPDATE TEST ===');
+
+            if (!fs.existsSync(mindFile)) throw new Error(`Missing ${mindFile}`);
+            if (!fs.existsSync(mappingFile)) throw new Error(`Missing ${mappingFile}`);
+
+            const existingBuffer = await readFile(mindFile);
+            const existingData = msgpack.decode(new Uint8Array(existingBuffer));
+            if (existingData.v !== 2 || !Array.isArray(existingData.dataList)) {
+              throw new Error(`Unsupported .mind format/version. Expected v2 dataList.`);
+            }
+
+            const existingCount = existingData.dataList.length;
+            const mapping = JSON.parse(await readFile(mappingFile, 'utf8'));
+            if (!Array.isArray(mapping.posters)) throw new Error('mapping-test.json has no posters array.');
+
+            log(`Existing MindAR targets: ${existingCount}`);
+            log(`Existing mapping entries: ${mapping.posters.length}`);
+
+            const imageExt = /\.(png|jpg|jpeg|webp)$/i;
+            const posterFiles = fs.readdirSync(testDir)
+              .filter(file => /^postertest\d+\.(png|jpg|jpeg|webp)$/i.test(file))
+              .sort(numericPosterSort);
+
+            if (posterFiles.length === 0) throw new Error('No postertest*.jpg/png files found.');
+
+            const byFile = new Map(mapping.posters.map(p => [p.targetFile, p]));
+            const mappedIndexes = new Set(mapping.posters.map(p => Number(p.targetIndex)));
+
+            // 1) Repair entries that already exist in mapping but are not yet inside the .mind file.
+            const pendingMapped = mapping.posters
+              .filter(p => Number(p.targetIndex) >= existingCount)
+              .sort((a, b) => Number(a.targetIndex) - Number(b.targetIndex));
+
+            // 2) Find genuinely new poster files that are not in mapping yet.
+            const unmapped = posterFiles.filter(file => !byFile.has(file));
+
+            // Existing mapping indexes below the current target count must be contiguous and unique.
+            const expectedExistingIndexes = Array.from({length: existingCount}, (_, i) => i);
+            for (const index of expectedExistingIndexes) {
+              const count = mapping.posters.filter(p => Number(p.targetIndex) === index).length;
+              if (count !== 1) {
+                throw new Error(`Mapping/index mismatch at targetIndex ${index}: expected exactly 1 mapping entry, found ${count}.`);
+              }
+            }
+
+            // Do not allow a gap before pending/new targets.
+            const highestMapped = mapping.posters.reduce((m, p) => Math.max(m, Number(p.targetIndex)), -1);
+            if (highestMapped >= existingCount && pendingMapped.length !== (highestMapped - existingCount + 1)) {
+              throw new Error('Mapping has a gap in pending targetIndex values. Refusing automatic merge.');
+            }
+
+            const workItems = [];
+
+            for (const p of pendingMapped) {
+              const filePath = path.join(testDir, p.targetFile);
+              if (!fs.existsSync(filePath)) {
+                throw new Error(`Mapped pending poster file is missing: ${p.targetFile}`);
+              }
+              workItems.push({
+                posterFile: p.targetFile,
+                targetIndex: Number(p.targetIndex),
+                videoId: p.videoId,
+                source: 'repair-existing-mapping'
+              });
+            }
+
+            // New posters are assigned the next indexes only after all pending mapped entries.
+            let nextIndex = existingCount + pendingMapped.length;
+            for (const posterFile of unmapped) {
+              const baseName = path.parse(posterFile).name;
+              log(`Looking up Bunny video for ${baseName}...`);
+              const bunny = await findBunnyVideo(baseName);
+              if (!bunny.videoId) throw new Error(`Bunny video ID missing for ${baseName}.`);
+
+              workItems.push({
+                posterFile,
+                targetIndex: nextIndex++,
+                videoId: bunny.videoId,
+                bunnyTitle: bunny.title,
+                source: 'new-poster'
+              });
+            }
+
+            if (workItems.length === 0) {
+              if (existingCount === mapping.posters.length) {
+                log('Nothing to update. .mind and mapping are already synchronized.');
+                return;
+              }
+              throw new Error('No work items found even though the files appear out of sync.');
+            }
+
+            // Compile ONLY the missing/new images. Never recompile the existing targets.
+            log(`Targets to compile now: ${workItems.length}`);
+            for (const item of workItems) {
+              log(`  ${item.targetIndex}: ${item.posterFile}`);
+            }
+
+            const images = [];
+            for (const item of workItems) {
+              const imagePath = path.join(testDir, item.posterFile);
+              if (!imageExt.test(item.posterFile)) throw new Error(`Unsupported image: ${item.posterFile}`);
+              images.push(await loadImage(imagePath));
+            }
+
+            const compiler = new OfflineCompiler();
+            await compiler.compileImageTargets(images, (progress) => {
+              process.stdout.write(`\rCompile progress: ${progress.toFixed(2)}%`);
+            });
+            process.stdout.write('\n');
+
+            const compiledBuffer = compiler.exportData();
+            const compiledData = msgpack.decode(new Uint8Array(compiledBuffer));
+
+            if (compiledData.v !== 2 || !Array.isArray(compiledData.dataList)) {
+              throw new Error('New compiler output is not a valid v2 MindAR database.');
+            }
+            if (compiledData.dataList.length !== workItems.length) {
+              throw new Error(`Compiler returned ${compiledData.dataList.length} targets; expected ${workItems.length}.`);
+            }
+
+            const combinedDataList = [
+              ...existingData.dataList,
+              ...compiledData.dataList
+            ];
+
+            const combinedBuffer = msgpack.encode({
+              v: 2,
+              dataList: combinedDataList
+            });
+
+            // Update mapping ONLY after successful compilation + validation.
+            for (const item of workItems) {
+              const alreadyMapped = mapping.posters.find(p => p.targetFile === item.posterFile);
+              if (alreadyMapped) continue;
+
+              mapping.posters.push({
+                id: path.parse(item.posterFile).name,
+                targetFile: item.posterFile,
+                targetIndex: item.targetIndex,
+                videoId: item.videoId
+              });
+            }
+
+            mapping.posters.sort((a, b) => Number(a.targetIndex) - Number(b.targetIndex));
+            if (mapping.posters.length !== combinedDataList.length) {
+              throw new Error(`Final validation failed: mapping=${mapping.posters.length}, mind=${combinedDataList.length}`);
+            }
+
+            await writeFile(mindFile, combinedBuffer);
+            await writeFile(mappingFile, JSON.stringify(mapping, null, 2) + '\n');
+
+            log(`SUCCESS: .mind updated from ${existingCount} to ${combinedDataList.length} targets.`);
+            log(`SUCCESS: mapping now contains ${mapping.posters.length} posters.`);
+            log(`Updated: ${mindFile}`);
+            log(`Updated: ${mappingFile}`);
+          }
+
+          main().catch(err => {
+            console.error(err);
+            process.exit(1);
+          });
+          NODE
+
+      - name: Check Bunny videos are ready
+        env:
+          BUNNY_API_KEY: ${{ secrets.BUNNY_API_KEY }}
+        run: |
+          set +e
+          node <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+          const https = require('https');
+
+          const repoRoot = process.env.GITHUB_WORKSPACE;
+          const testDir = path.join(repoRoot, 'test-bunny');
+          const mappingFile = path.join(testDir, 'mapping-test.json');
+          const libraryId = '768132';
+          const key = process.env.BUNNY_API_KEY;
+
+          function get(url) {
+            return new Promise((resolve, reject) => {
+              const req = https.get(url, {
+                headers: { AccessKey: key, Accept: 'application/json' }
+              }, res => {
+                let body = '';
+                res.on('data', c => body += c);
+                res.on('end', () => {
+                  if (res.statusCode < 200 || res.statusCode >= 300) {
+                    reject(new Error(`Bunny API ${res.statusCode}: ${body}`));
+                    return;
+                  }
+                  resolve(JSON.parse(body));
+                });
+              });
+              req.on('error', reject);
+            });
+          }
+
+          async function main() {
+            if (!key) throw new Error('BUNNY_API_KEY secret is missing.');
+
+            const mapping = JSON.parse(fs.readFileSync(mappingFile, 'utf8'));
+            const mapped = new Set((mapping.posters || []).map(p => p.targetFile));
+            const posters = fs.readdirSync(testDir)
+              .filter(f => /^postertest\d+\.(jpg|jpeg|png|webp)$/i.test(f))
+              .sort();
+
+            const pending = posters.filter(f => !mapped.has(f));
+            if (!pending.length) {
+              console.log('No unmapped posters. Nothing to wait for.');
+              return;
+            }
+
+            for (const file of pending) {
+              const base = path.parse(file).name.toLowerCase();
+              const url = `https://video.bunnycdn.com/library/${libraryId}/videos?page=1&itemsPerPage=1000&search=${encodeURIComponent(base)}`;
+              const data = await get(url);
+              const match = (data.items || []).find(v => {
+                const title = String(v.title || '').toLowerCase();
+                return title === base || title === `${base}.mp4`;
+              });
+
+              if (!match) {
+                console.log(`WAITING: Bunny video not found yet for ${file}.`);
+                console.log('This run will stop safely. The 5-minute schedule will check again automatically.');
+                process.exit(10);
+              }
+
+              console.log(`READY: ${file} -> ${match.title} -> ${match.guid}`);
+            }
+          }
+
+          main().catch(err => {
+            console.error(err);
+            process.exit(1);
+          });
+          NODE
+          rc=$?
+          set -e
+          # Exit code 10 means the video is not uploaded yet; keep the job green
+          # and let the 5-minute schedule retry. Other errors remain failures.
+          if [ "$rc" -eq 10 ]; then
+            echo "BUNNY_NOT_READY=true" >> "$GITHUB_ENV"
+          elif [ "$rc" -ne 0 ]; then
+            exit "$rc"
+          fi
+
+      - name: Run Bunny + MindAR auto update
+        if: env.BUNNY_NOT_READY != 'true'
+        env:
+          BUNNY_API_KEY: ${{ secrets.BUNNY_API_KEY }}
+        run: node mindar/build-bunny-auto-update-test.js
+
+      - name: Commit updated test MindAR database and mapping
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add test-bunny/targets-test.mind test-bunny/mapping-test.json
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Auto-update test MindAR targets"
+            git push
+          fi
+
+      - name: Finish
+        run: |
+          echo "=== TEST AUTO UPDATE COMPLETE ==="
+          echo "The test MindAR database is now updated automatically."
