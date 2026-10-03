@@ -1,0 +1,330 @@
+name: Bunny + MindAR Incremental Offline Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test-targets:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Clone MindAR v1.2.5
+        run: |
+          git clone --depth 1 --branch v1.2.5 \
+            https://github.com/hiukim/mind-ar-js.git mindar
+
+      - name: Install canvas build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            libcairo2-dev \
+            libpango1.0-dev \
+            libjpeg-dev \
+            libgif-dev \
+            librsvg2-dev
+
+      - name: Install MindAR dependencies
+        working-directory: mindar
+        run: npm install
+
+      - name: Create Bunny + incremental compiler test
+        env:
+          BUNNY_API_KEY: ${{ secrets.BUNNY_API_KEY }}
+        working-directory: mindar
+        run: |
+          set -e
+
+          cat > build-bunny-test.js <<'EOF_JS'
+          import { OfflineCompiler } from './src/image-target/offline-compiler.js';
+          import { loadImage } from 'canvas';
+          import { readFile, writeFile } from 'fs/promises';
+          import * as msgpack from '@msgpack/msgpack';
+          import fs from 'fs';
+          import path from 'path';
+
+          const repoRoot = process.env.GITHUB_WORKSPACE;
+          const testDir = path.join(repoRoot, 'test-bunny');
+          const mindFile = path.join(testDir, 'targets-test.mind');
+          const mappingFile = path.join(testDir, 'mapping-test.json');
+          const outputDir = path.join(repoRoot, 'artifacts');
+          const outputMind = path.join(outputDir, 'targets-test.mind');
+          const outputMapping = path.join(outputDir, 'mapping-test.json');
+          const libraryId = '768132';
+
+          function requireFile(file, label) {
+            if (!fs.existsSync(file)) {
+              throw new Error(`${label} not found: ${file}`);
+            }
+          }
+
+          async function findBunnyVideo(baseName) {
+            const url = new URL(
+              `https://video.bunnycdn.com/library/${libraryId}/videos`
+            );
+            url.searchParams.set('page', '1');
+            url.searchParams.set('itemsPerPage', '1000');
+            url.searchParams.set('search', baseName);
+
+            const response = await fetch(url, {
+              headers: {
+                AccessKey: process.env.BUNNY_API_KEY,
+                Accept: 'application/json'
+              }
+            });
+
+            if (!response.ok) {
+              throw new Error(
+                `Bunny API error for ${baseName}: HTTP ${response.status}`
+              );
+            }
+
+            const data = await response.json();
+            const wanted = baseName.toLowerCase();
+
+            const match = (data.items || []).find(item => {
+              const title = String(item.title || '').toLowerCase();
+              return title === wanted || title === `${wanted}.mp4`;
+            });
+
+            if (!match || !match.guid) {
+              return null;
+            }
+
+            return {
+              title: match.title,
+              videoId: match.guid
+            };
+          }
+
+          async function run() {
+            console.log('=== BUNNY + MINDAR INCREMENTAL TEST ===');
+
+            requireFile(testDir, 'Test directory');
+            requireFile(mindFile, 'Existing test targets.mind');
+            requireFile(mappingFile, 'Existing mapping-test.json');
+
+            fs.mkdirSync(outputDir, { recursive: true });
+
+            /* ================================
+               LOAD EXISTING MINDAR DATABASE
+            ================================= */
+            const existingBuffer = await readFile(mindFile);
+            const existingData = msgpack.decode(
+              new Uint8Array(existingBuffer)
+            );
+
+            if (
+              existingData.v !== 2 ||
+              !Array.isArray(existingData.dataList)
+            ) {
+              throw new Error('Invalid test MindAR database format.');
+            }
+
+            const existingCount = existingData.dataList.length;
+            console.log(`Existing MindAR targets: ${existingCount}`);
+
+            /* ================================
+               LOAD EXISTING MAPPING
+            ================================= */
+            const mapping = JSON.parse(
+              await readFile(mappingFile, 'utf8')
+            );
+
+            if (!Array.isArray(mapping.posters)) {
+              throw new Error('mapping-test.json has no posters array.');
+            }
+
+            if (mapping.posters.length !== existingCount) {
+              throw new Error(
+                `Safety check failed: mapping has ${mapping.posters.length} posters but targets-test.mind has ${existingCount} targets.`
+              );
+            }
+
+            const mappedFiles = new Set(
+              mapping.posters.map(p => p.targetFile)
+            );
+
+            /* ================================
+               FIND ALL TEST POSTERS
+            ================================= */
+            const allFiles = fs.readdirSync(testDir)
+              .filter(file => /\.(png|jpg|jpeg|webp)$/i.test(file))
+              .filter(file => /^postertest\d+\.(png|jpg|jpeg|webp)$/i.test(file))
+              .sort((a, b) => {
+                const na = Number(a.match(/(\d+)/)?.[1] || 0);
+                const nb = Number(b.match(/(\d+)/)?.[1] || 0);
+                return na - nb;
+              });
+
+            console.log('Poster files found:');
+            allFiles.forEach(file => console.log(`- ${file}`));
+
+            const newFiles = allFiles.filter(file => !mappedFiles.has(file));
+
+            if (newFiles.length === 0) {
+              console.log('No new posters found in test-bunny/.');
+              console.log('Nothing to compile. Add a new poster + matching Bunny video and run again.');
+              return;
+            }
+
+            console.log(`New posters to process: ${newFiles.length}`);
+
+            /* ================================
+               MATCH NEW POSTERS TO BUNNY
+            ================================= */
+            const readyFiles = [];
+            const bunnyMatches = new Map();
+
+            for (const file of newFiles) {
+              const baseName = path.parse(file).name;
+              console.log(`Searching Bunny for: ${baseName}`);
+
+              const bunny = await findBunnyVideo(baseName);
+
+              if (!bunny) {
+                throw new Error(
+                  `Matching Bunny video not found for ${file}. Expected title: ${baseName} or ${baseName}.mp4`
+                );
+              }
+
+              bunnyMatches.set(file, bunny);
+              readyFiles.push(file);
+
+              console.log(
+                `MATCHED: ${file} -> ${bunny.title} -> ${bunny.videoId}`
+              );
+            }
+
+            /* ================================
+               LOAD ONLY NEW IMAGES
+            ================================= */
+            const images = [];
+
+            for (const file of readyFiles) {
+              console.log(`Loading NEW target: ${file}`);
+              const image = await loadImage(path.join(testDir, file));
+              images.push(image);
+            }
+
+            /* ================================
+               COMPILE ONLY NEW TARGETS
+            ================================= */
+            const compiler = new OfflineCompiler();
+            const start = Date.now();
+
+            console.log('Compiling NEW targets only...');
+
+            await compiler.compileImageTargets(
+              images,
+              progress => {
+                console.log(
+                  `New target progress: ${progress.toFixed(2)}%`
+                );
+              }
+            );
+
+            const newBuffer = compiler.exportData();
+            const newData = msgpack.decode(
+              new Uint8Array(newBuffer)
+            );
+
+            const elapsed = (
+              (Date.now() - start) / 1000
+            ).toFixed(2);
+
+            console.log(`New target compile time: ${elapsed} seconds`);
+
+            /* ================================
+               MERGE OLD + NEW
+            ================================= */
+            const combinedDataList = [
+              ...existingData.dataList,
+              ...newData.dataList
+            ];
+
+            const combined = msgpack.encode({
+              v: existingData.v,
+              dataList: combinedDataList
+            });
+
+            /* ================================
+               UPDATE BUNNY MAPPING
+            ================================= */
+            for (let i = 0; i < readyFiles.length; i++) {
+              const posterFile = readyFiles[i];
+              const posterId = path.parse(posterFile).name;
+              const bunny = bunnyMatches.get(posterFile);
+              const targetIndex = existingCount + i;
+
+              mapping.posters.push({
+                id: posterId,
+                targetFile: posterFile,
+                targetIndex,
+                videoId: bunny.videoId
+              });
+
+              console.log(
+                `ADDED: ${posterFile} -> ${bunny.videoId} -> index ${targetIndex}`
+              );
+            }
+
+            mapping.posters.sort(
+              (a, b) => a.targetIndex - b.targetIndex
+            );
+
+            /* ================================
+               WRITE TEST ARTIFACTS ONLY
+            ================================= */
+            await writeFile(outputMind, combined);
+            await writeFile(
+              outputMapping,
+              JSON.stringify(mapping, null, 2) + '\n'
+            );
+
+            console.log(`Combined targets: ${combinedDataList.length}`);
+            console.log(`TEST MIND FILE: ${outputMind}`);
+            console.log(`TEST MAPPING FILE: ${outputMapping}`);
+            console.log('SUCCESS: Old OfflineCompiler method + Bunny mapping completed.');
+            console.log('Repository files were NOT changed.');
+          }
+
+          run().catch(error => {
+            console.error(error);
+            process.exit(1);
+          });
+          EOF_JS
+
+          node build-bunny-test.js
+
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: bunny-incremental-offline-test
+          path: |
+            artifacts/targets-test.mind
+            artifacts/mapping-test.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Finish
+        run: |
+          echo "=========================================="
+          echo "BUNNY + MINDAR OFFLINE TEST COMPLETE"
+          echo "=========================================="
+          echo "No production file was changed."
+          echo "No build-targets.yml was changed."
+          echo "The generated .mind and mapping are test artifacts only."
