@@ -1,0 +1,157 @@
+name: Bunny Production Migration Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  migration-test:
+    runs-on: ubuntu-latest
+
+    env:
+      BUNNY_LIBRARY_ID: "768132"
+      BUNNY_API_KEY: ${{ secrets.BUNNY_API_KEY }}
+
+    steps:
+      - name: Checkout production repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Validate existing production mapping against Bunny
+        run: |
+          cat > migration-test.mjs <<'NODE'
+          import fs from 'fs/promises';
+          import path from 'path';
+
+          const content = JSON.parse(
+            await fs.readFile('content.json', 'utf8')
+          );
+
+          const libraryId = process.env.BUNNY_LIBRARY_ID;
+          const apiKey = process.env.BUNNY_API_KEY;
+
+          if (!apiKey) {
+            throw new Error('BUNNY_API_KEY secret is missing.');
+          }
+
+          if (!Array.isArray(content.posters)) {
+            throw new Error('content.json has no posters array.');
+          }
+
+          async function bunnyFind(videoFile) {
+            const baseName = path.parse(videoFile).name;
+
+            const url =
+              `https://video.bunnycdn.com/library/${libraryId}/videos` +
+              `?page=1&itemsPerPage=100&search=${encodeURIComponent(baseName)}`;
+
+            const response = await fetch(url, {
+              headers: {
+                AccessKey: apiKey,
+                Accept: 'application/json'
+              }
+            });
+
+            if (!response.ok) {
+              throw new Error(
+                `Bunny API failed for ${baseName}: ` +
+                `${response.status} ${await response.text()}`
+              );
+            }
+
+            const data = await response.json();
+            const videos = Array.isArray(data.items) ? data.items : [];
+
+            return videos.find(video => {
+              const title = String(video.title || '').trim();
+              return title === baseName || title === `${baseName}.mp4`;
+            }) || null;
+          }
+
+          const migrated = [];
+          const missing = [];
+
+          console.log(`Production posters found: ${content.posters.length}`);
+
+          for (const poster of content.posters) {
+            if (!poster.video) {
+              missing.push({
+                poster: poster.targetFile,
+                reason: 'No existing video field'
+              });
+              continue;
+            }
+
+            const bunnyVideo = await bunnyFind(poster.video);
+
+            if (!bunnyVideo) {
+              console.log(
+                `MISSING: ${poster.targetFile} -> ${poster.video}`
+              );
+
+              missing.push({
+                poster: poster.targetFile,
+                video: poster.video,
+                reason: 'Matching Bunny video not found'
+              });
+
+              continue;
+            }
+
+            console.log(
+              `MATCHED: ${poster.targetFile} -> ${bunnyVideo.title} -> ${bunnyVideo.guid}`
+            );
+
+            migrated.push({
+              id: poster.id,
+              targetFile: poster.targetFile,
+              targetIndex: poster.targetIndex,
+              videoId: bunnyVideo.guid
+            });
+          }
+
+          const result = {
+            version: 3,
+            source: 'production-content.json',
+            totalPosters: content.posters.length,
+            matched: migrated.length,
+            missing: missing.length,
+            posters: migrated,
+            missingItems: missing
+          };
+
+          await fs.writeFile(
+            'bunny-migration-test-result.json',
+            JSON.stringify(result, null, 2) + '\n'
+          );
+
+          console.log('');
+          console.log(`MATCHED: ${migrated.length}/${content.posters.length}`);
+          console.log(`MISSING: ${missing.length}`);
+
+          if (missing.length > 0) {
+            throw new Error(
+              `Migration test incomplete: ${missing.length} production video(s) ` +
+              'could not be matched in Bunny.'
+            );
+          }
+
+          console.log('SUCCESS: All production videos matched in Bunny.');
+          console.log('Production files were NOT modified.');
+          NODE
+
+          node migration-test.mjs
+
+      - name: Upload migration test result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bunny-production-migration-test
+          path: bunny-migration-test-result.json
+          if-no-files-found: ignore
