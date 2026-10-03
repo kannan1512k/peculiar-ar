@@ -1,0 +1,43 @@
+name: Bunny Video ID Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-bunny-video:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Search Bunny video by name
+        env:
+          BUNNY_API_KEY: ${{ secrets.BUNNY_API_KEY }}
+        run: |
+          set -e
+
+          VIDEO_NAME="postertest5"
+          LIBRARY_ID="768132"
+
+          echo "Searching Bunny Stream for: $VIDEO_NAME"
+
+          RESPONSE=$(curl -sS \
+            -H "AccessKey: $BUNNY_API_KEY" \
+            -H "Accept: application/json" \
+            "https://video.bunnycdn.com/library/$LIBRARY_ID/videos?page=1&itemsPerPage=1000&search=$VIDEO_NAME")
+
+          echo "Bunny API response:"
+          echo "$RESPONSE"
+
+          VIDEO_ID=$(echo "$RESPONSE" | jq -r --arg NAME "$VIDEO_NAME" '
+            .items[]
+            | select(.title == $NAME)
+            | .guid
+          ' | head -n 1)
+
+          if [ -z "$VIDEO_ID" ] || [ "$VIDEO_ID" = "null" ]; then
+            echo "ERROR: Video '$VIDEO_NAME' was not found in Bunny."
+            exit 1
+          fi
+
+          echo "SUCCESS: Bunny video found."
+          echo "Video Name: $VIDEO_NAME"
+          echo "Video ID: $VIDEO_ID"
