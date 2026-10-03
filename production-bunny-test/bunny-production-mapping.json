@@ -1,0 +1,48 @@
+{
+  "version": 3,
+  "source": "production content.json + Bunny Stream",
+  "posters": [
+    {
+      "id": "poster001",
+      "targetFile": "poster001.jpg",
+      "targetIndex": 0,
+      "videoId": "f0663203-7b0f-4d0d-871b-8e2b61a16dca"
+    },
+    {
+      "id": "poster002",
+      "targetFile": "poster002.jpg",
+      "targetIndex": 1,
+      "videoId": "62d1321a-0d4a-4832-9548-9998820ad729"
+    },
+    {
+      "id": "poster003",
+      "targetFile": "poster003.jpg",
+      "targetIndex": 2,
+      "videoId": "401137b0-2d1e-4493-bac9-bf9d7c3b8138"
+    },
+    {
+      "id": "poster004",
+      "targetFile": "poster004.jpg",
+      "targetIndex": 3,
+      "videoId": "1408516c-500e-4635-9277-e2cc939dc2dc"
+    },
+    {
+      "id": "poster005",
+      "targetFile": "poster005.jpg",
+      "targetIndex": 4,
+      "videoId": "af2188af-25c6-4dd5-b17d-aac0510a394e"
+    },
+    {
+      "id": "poster006",
+      "targetFile": "poster006.jpg",
+      "targetIndex": 5,
+      "videoId": "85114b73-d9a9-459f-a271-f7c1d3e430f7"
+    },
+    {
+      "id": "poster007",
+      "targetFile": "poster007.jpg",
+      "targetIndex": 6,
+      "videoId": "729f5c66-b17d-4bf2-b40d-5d2e0c339a31"
+    }
+  ]
+}
