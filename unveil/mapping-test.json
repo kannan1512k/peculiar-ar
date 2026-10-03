@@ -36,6 +36,12 @@
       "targetFile": "postertest6.jpg",
       "targetIndex": 5,
       "videoId": "45577fc8-fde6-4647-812b-6883bbd69899"
+    },
+    {
+      "id": "msd1",
+      "targetFile": "msd1.jpg",
+      "targetIndex": 6,
+      "videoId": "b24b810c-0246-43f9-a6be-189873dacde1"
     }
   ]
 }
