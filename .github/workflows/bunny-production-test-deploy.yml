@@ -34,6 +34,8 @@ jobs:
 
           cp bunny-production-bunny-test.html production-bunny-test/index.html
           cp targets.mind production-bunny-test/targets.mind
+          mkdir -p production-bunny-test/targets
+          cp targets/*.jpg production-bunny-test/targets/ 2>/dev/null || true
 
           node <<'NODE'
           const fs = require('fs');
