@@ -20,10 +20,16 @@
       "videoId": "31c4e734-4798-48c3-977c-3e839b7489a2"
     },
     {
-  "id": "postertest4",
-  "targetFile": "postertest4.jpg",
-  "targetIndex": 3,
-  "videoId": "5ebeca0c-3637-473a-a16a-dedb120b96da"
+      "id": "postertest4",
+      "targetFile": "postertest4.jpg",
+      "targetIndex": 3,
+      "videoId": "5ebeca0c-3637-473a-a16a-dedb120b96da"
+    },
+    {
+      "id": "postertest5",
+      "targetFile": "postertest5.jpg",
+      "targetIndex": 4,
+      "videoId": "ac8870e1-f4d3-4070-a755-93671a0e227b"
     }
   ]
 }
