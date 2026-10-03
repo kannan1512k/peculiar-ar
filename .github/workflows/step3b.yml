@@ -1,0 +1,174 @@
+name: MindAR Step 3B - Browser Compiler Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compile-mindar-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Playwright
+        run: |
+          set -e
+          npm init -y
+          npm install playwright
+          npx playwright install --with-deps chromium
+
+      - name: Check poster files
+        run: |
+          set -e
+          TEST_DIR="test-bunny"
+
+          mapfile -t POSTERS < <(
+            find "$TEST_DIR" -maxdepth 1 -type f \
+              -iname 'postertest*.jpg' \
+              -printf '%f\n' | sort -V
+          )
+
+          echo "Posters found: ${#POSTERS[@]}"
+          printf '%s\n' "${POSTERS[@]}"
+
+          if [ "${#POSTERS[@]}" -lt 1 ]; then
+            echo "ERROR: No postertest*.jpg files found."
+            exit 1
+          fi
+
+          printf '%s\n' "${POSTERS[@]}" > /tmp/posters.txt
+
+      - name: Compile posters with MindAR browser compiler
+        env:
+          POSTER_LIST: /tmp/posters.txt
+        run: |
+          set -e
+          mkdir -p artifacts
+
+          cat > /tmp/compile-mindar.js <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+          const { chromium } = require('playwright');
+
+          const repo = process.cwd();
+          const testDir = path.join(repo, 'test-bunny');
+          const outputDir = path.join(repo, 'artifacts');
+
+          const names = fs.readFileSync(process.env.POSTER_LIST, 'utf8')
+            .split(/\r?\n/)
+            .map(s => s.trim())
+            .filter(Boolean);
+
+          const files = names.map(name => path.join(testDir, name));
+
+          console.log('Poster order:');
+          files.forEach((f, i) => console.log(`${i}: ${path.basename(f)}`));
+
+          const browser = await chromium.launch({
+            headless: true,
+            args: [
+              '--no-sandbox',
+              '--disable-dev-shm-usage',
+              '--use-gl=swiftshader',
+              '--enable-unsafe-swiftshader'
+            ]
+          });
+
+          const page = await browser.newPage({ acceptDownloads: true });
+
+          page.on('console', msg => {
+            const text = msg.text();
+            if (/progress|compile|data/i.test(text)) {
+              console.log(`[browser] ${text}`);
+            }
+          });
+
+          page.on('pageerror', err => {
+            console.error('[browser pageerror]', err);
+          });
+
+          try {
+            const url = 'https://hiukim.github.io/mind-ar-js-doc/tools/compile/';
+            console.log(`Opening MindAR compiler: ${url}`);
+
+            await page.goto(url, {
+              waitUntil: 'networkidle',
+              timeout: 120000
+            });
+
+            await page.waitForSelector('input[type="file"]', {
+              timeout: 60000
+            });
+
+            await page.locator('input[type="file"]').first().setInputFiles(files);
+
+            console.log(`Uploaded ${files.length} poster images.`);
+
+            const startButton = page.getByRole('button', { name: /^Start$/i });
+            await startButton.waitFor({ state: 'visible', timeout: 30000 });
+            await startButton.click();
+
+            console.log('Compilation started. Waiting for completion...');
+
+            await page.waitForFunction(() => {
+              const text = document.body.innerText || '';
+              return /progress:\s*100\.00%/i.test(text) || /100\.00%/i.test(text);
+            }, { timeout: 30 * 60 * 1000 });
+
+            console.log('Compiler reached 100%.');
+
+            const canvasCount = await page.locator('#container canvas').count();
+            console.log(`Compiler debug canvas count: ${canvasCount}`);
+
+            const downloadButton = page.getByRole('button', { name: /^Download$/i });
+            await downloadButton.waitFor({ state: 'visible', timeout: 30000 });
+
+            const downloadPromise = page.waitForEvent('download', { timeout: 120000 });
+            await downloadButton.click();
+
+            const download = await downloadPromise;
+            const targetPath = path.join(outputDir, 'targets-test.mind');
+            await download.saveAs(targetPath);
+
+            const stat = fs.statSync(targetPath);
+            if (stat.size < 1000) {
+              throw new Error(`Downloaded targets-test.mind is unexpectedly small: ${stat.size} bytes`);
+            }
+
+            console.log(`SUCCESS: targets-test.mind created (${stat.size} bytes).`);
+
+            if (canvasCount > 0 && canvasCount < files.length) {
+              throw new Error(
+                `Compiler rendered only ${canvasCount} debug canvases for ${files.length} posters.`
+              );
+            }
+          } finally {
+            await browser.close();
+          }
+          NODE
+
+          node /tmp/compile-mindar.js
+
+      - name: Upload compiled MindAR target as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: targets-test-step3b
+          path: artifacts/targets-test.mind
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Finish
+        run: |
+          echo "STEP 3B COMPLETE"
+          echo "The new targets-test.mind was created only as a workflow artifact."
+          echo "No repository file was replaced."
+          echo "No production file was changed."
