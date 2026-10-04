@@ -1322,111 +1322,131 @@ async function loadContent() {
         ""
       );
 
-      video.preload = "auto";
-
       /*
-        Bunny HLS:
-        Safari/iOS can use native HLS.
-        Chrome/Android use hls.js.
+        LAZY VIDEO LOADING TEST:
+        Do not create/load any Bunny HLS stream
+        while the AR page is starting. The stream
+        is created only after this specific poster
+        is detected.
       */
+      video.preload = "none";
+
       const bunnyHlsUrl =
         bunnyHost +
         "/" +
         poster.videoId +
         "/playlist.m3u8";
 
-      video._hlsReadyPromise =
-        new Promise((resolve, reject) => {
+      video._hlsReadyPromise = null;
+      video._hlsLoadStarted = false;
 
-          let ready = false;
+      video._loadBunnyStream = function () {
 
-          const resolveReady = () => {
-            if (ready) return;
-            ready = true;
-            resolve();
-          };
+        if (video._hlsReadyPromise) {
+          return video._hlsReadyPromise;
+        }
 
-          video.addEventListener(
-            "loadedmetadata",
-            resolveReady,
-            { once: true }
-          );
+        video._hlsLoadStarted = true;
 
-          if (
-            video.canPlayType(
-              "application/vnd.apple.mpegurl"
-            )
-          ) {
+        video._hlsReadyPromise =
+          new Promise((resolve, reject) => {
 
-            video.src = bunnyHlsUrl;
-            video.load();
+            let ready = false;
 
-          } else if (
-            window.Hls &&
-            Hls.isSupported()
-          ) {
+            const resolveReady = () => {
+              if (ready) return;
+              ready = true;
+              resolve();
+            };
 
-            const hls =
-              new Hls({
-                enableWorker: true,
-                lowLatencyMode: false
-              });
-
-            video._hlsInstance = hls;
-
-            hls.on(
-              Hls.Events.MANIFEST_PARSED,
-              resolveReady
+            video.addEventListener(
+              "loadedmetadata",
+              resolveReady,
+              { once: true }
             );
 
-            hls.on(
-              Hls.Events.ERROR,
-              (_event, data) => {
+            /*
+              Chrome/Android: hls.js first.
+              Safari/iOS: native HLS fallback.
+            */
+            if (
+              window.Hls &&
+              Hls.isSupported()
+            ) {
 
-                console.warn(
-                  "Bunny HLS:",
-                  data
-                );
+              const hls =
+                new Hls({
+                  enableWorker: true,
+                  lowLatencyMode: false
+                });
 
-                if (
-                  data &&
-                  data.fatal &&
-                  !ready
-                ) {
-                  reject(
-                    new Error(
-                      "Bunny HLS failed: " +
-                      (
-                        data.details ||
-                        data.type ||
-                        "unknown"
-                      )
-                    )
+              video._hlsInstance = hls;
+
+              hls.on(
+                Hls.Events.MANIFEST_PARSED,
+                resolveReady
+              );
+
+              hls.on(
+                Hls.Events.ERROR,
+                (_event, data) => {
+
+                  console.warn(
+                    "Bunny HLS:",
+                    data
                   );
+
+                  if (
+                    data &&
+                    data.fatal &&
+                    !ready
+                  ) {
+                    reject(
+                      new Error(
+                        "Bunny HLS failed: " +
+                        (
+                          data.details ||
+                          data.type ||
+                          "unknown"
+                        )
+                      )
+                    );
+                  }
+
                 }
+              );
 
-              }
-            );
+              hls.loadSource(
+                bunnyHlsUrl
+              );
 
-            hls.loadSource(
-              bunnyHlsUrl
-            );
+              hls.attachMedia(
+                video
+              );
 
-            hls.attachMedia(
-              video
-            );
-
-          } else {
-
-            reject(
-              new Error(
-                "This browser does not support HLS playback."
+            } else if (
+              video.canPlayType(
+                "application/vnd.apple.mpegurl"
               )
-            );
+            ) {
 
-          }
+              video.src = bunnyHlsUrl;
+              video.load();
 
-        });
+            } else {
+
+              reject(
+                new Error(
+                  "This browser does not support HLS playback."
+                )
+              );
+
+            }
+
+          });
+
+        return video._hlsReadyPromise;
+      };
 
       videoAssets.appendChild(video);
       videos.push(video);
@@ -1528,7 +1548,7 @@ async function loadContent() {
             provider is intentionally not exposed to
             the visitor.
           */
-          await video._hlsReadyPromise;
+          await video._loadBunnyStream();
 
           hideMagicScanner();
 
