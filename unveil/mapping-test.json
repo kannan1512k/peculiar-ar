@@ -108,6 +108,12 @@
       "targetFile": "csk07.jpg",
       "targetIndex": 17,
       "videoId": "3b6be6f4-800d-4f69-8c89-2f5624a92254"
+    },
+    {
+      "id": "cm1",
+      "targetFile": "cm1.jpg",
+      "targetIndex": 18,
+      "videoId": "fbd3cc7d-d429-43bf-957c-f7a7ca2f190e"
     }
   ]
 }
