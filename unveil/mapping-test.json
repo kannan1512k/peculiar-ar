@@ -42,6 +42,12 @@
       "targetFile": "msd1.jpg",
       "targetIndex": 6,
       "videoId": "b24b810c-0246-43f9-a6be-189873dacde1"
+    },
+    {
+      "id": "surya1",
+      "targetFile": "surya1.jpg",
+      "targetIndex": 7,
+      "videoId": "9bdda5b7-6de5-4678-8360-1d27c14f619c"
     }
   ]
 }
