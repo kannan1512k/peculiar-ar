@@ -1,4 +1,11 @@
 {
   "version": 1,
-  "posters": []
+  "posters": [
+    {
+      "id": "thala1",
+      "targetFile": "thala1.jpg",
+      "targetIndex": 0,
+      "videoId": "09436a27-fb37-4e62-9512-a59350f50648"
+    }
+  ]
 }
