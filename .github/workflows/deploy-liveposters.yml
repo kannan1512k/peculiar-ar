@@ -7,6 +7,11 @@ on:
     paths:
       - 'unveil/**'
       - '.github/workflows/deploy-liveposters.yml'
+
+  repository_dispatch:
+    types:
+      - unveil_updated
+
   workflow_dispatch:
 
 permissions:
