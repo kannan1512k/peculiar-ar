@@ -2,34 +2,10 @@
   "version": 1,
   "posters": [
     {
-      "id": "thala1",
-      "targetFile": "thala1.jpg",
+      "id": "cm1",
+      "targetFile": "cm1.jpg",
       "targetIndex": 0,
-      "videoId": "09436a27-fb37-4e62-9512-a59350f50648"
-    },
-    {
-      "id": "thala2",
-      "targetFile": "thala2.jpg",
-      "targetIndex": 1,
-      "videoId": "a1a87f74-ab02-4c3b-9c53-527748c3083c"
-    },
-    {
-      "id": "samantha",
-      "targetFile": "samantha.jpg",
-      "targetIndex": 2,
-      "videoId": "d4dcce8c-3951-45a4-8348-857412c85e1e"
-    },
-    {
-      "id": "thunivu",
-      "targetFile": "thunivu.jpg",
-      "targetIndex": 3,
-      "videoId": "fed4e541-85a4-4f5b-9780-6f9f9e42ac62"
-    },
-    {
-      "id": "cmoath",
-      "targetFile": "cmoath.jpg",
-      "targetIndex": 4,
-      "videoId": "ecedce30-a6bc-4f42-8cb1-1498cd6b970b"
+      "videoId": "5ecd2ba9-217e-4792-96f1-90a4b157c6ad"
     }
   ]
 }
