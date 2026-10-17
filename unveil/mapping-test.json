@@ -12,6 +12,12 @@
       "targetFile": "akhugcm.jpg",
       "targetIndex": 1,
       "videoId": "babdf437-109a-496d-90dd-6aebe2ca8250"
+    },
+    {
+      "id": "ak1",
+      "targetFile": "ak1.jpg",
+      "targetIndex": 2,
+      "videoId": "9776ce3f-6064-475d-8603-0468bd5fb920"
     }
   ]
 }
